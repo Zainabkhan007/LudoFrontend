@@ -187,10 +187,14 @@
     });
     const data = await response.json();
     if(data.success){
-      window.yourColor = data.assigned_color;
+      yourColor = data.assigned_color;
+      playerOrder = data.joined_players;   // << yahan dynamic list milegi backend se
+      currentPlayerTurnIndex = 0;
+      currentPlayerTurnStatus = playerOrder[currentPlayerTurnIndex] === yourColor;
 
       document.getElementById("joinScreen").style.display = "none";
       document.getElementById("gameScreen").style.display = "block";
+      startGame();
     }else{
       alert(data.error);
     }
@@ -199,6 +203,8 @@
     alert("Error joining game");
   }
 });
+
+
 
 
 //   window.yourColor = "{{ userColor }}";
