@@ -238,4 +238,4 @@ channel.bind("piece-moved", data=>{
 // highlight start
 updateHighlight();
 currentPlayerTurnStatus = playerOrder[currentPlayerTurnIndex] === yourColor;
-// currentPlayerTurnStatus = true; 
+currentPlayerTurnStatus = true; 
