@@ -1,0 +1,344 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Poppins:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --red: #fa0000;
+    --green: #009a2a;
+    --yellow: #fee800;
+    --blue: #00acff;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    overflow-x: hidden;
+}
+
+body {
+    background: radial-gradient(circle, rgba(11,64,177,1) 0%, rgba(7,30,78,1) 100%);
+    font-family: 'Poppins', sans-serif;
+}
+
+.ludoContainer {
+    display: flex;
+    /* flex-direction: column; */
+    padding: 10px;
+    gap: 30px;
+    height: auto;
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Ludo Board */
+#ludoBoard {
+    width: 90vmin;
+    height: 90vmin;
+    max-width: 95vw;
+    max-height: 95vw;
+    background: #fff;
+    display: grid;
+    grid-template-areas:
+        'red-Board red-Board green-Path green-Board green-Board'
+        'red-Board red-Board green-Path green-Board green-Board'
+        'red-Path red-Path win-Zone yellow-Path yellow-Path'
+        'blue-Board blue-Board blue-Path yellow-Board yellow-Board'
+        'blue-Board blue-Board blue-Path yellow-Board yellow-Board';
+}
+
+/* Boards */
+#red-Board { grid-area: red-Board; background-color: var(--red); }
+#yellow-Board { grid-area: yellow-Board; background-color: var(--yellow); }
+#blue-Board { grid-area: blue-Board; background-color: var(--blue); }
+#green-Board { grid-area: green-Board; background-color: var(--green); }
+
+/* Paths */
+#green-Path { grid-area: green-Path; }
+#blue-Path { grid-area: blue-Path; }
+#yellow-Path { grid-area: yellow-Path; }
+#red-Path { grid-area: red-Path; }
+#win-Zone { grid-area: win-Zone; }
+/* s */
+#win-Zone {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  overflow: hidden;
+}
+
+.triangle {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  clip-path: polygon(50% 50%, 100% 0%, 100% 100%);
+  transform-origin: center;
+}
+
+.red {
+  background-color: red;
+  transform: rotate(180deg);
+}
+
+.green {
+  background-color: green;
+  transform: rotate(270deg);
+}
+
+.yellow {
+  background-color: yellow;
+  transform: rotate(0deg);
+}
+
+.blue {
+  background-color: blue;
+  transform: rotate(90deg);
+}
+
+/* end */
+
+.verticalPath {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(6, 1fr);
+}
+
+.horizontalPath {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+}
+
+/* Board Pieces */
+.board {
+    padding: 12px;
+    background: #1212;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.board div {
+    width: 80%;
+    height: 80%;
+    background: white;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    align-items: center;
+    justify-items: center;
+}
+
+.board div span {
+    width: 40%;
+    height: 40%;
+    border-radius: 50%;
+    position: relative;
+}
+
+#yellow-Board div span { background: var(--yellow); }
+#blue-Board div span { background: var(--blue); }
+#red-Board div span { background: var(--red); }
+#green-Board div span { background: var(--green); }
+
+/* Ludo Boxes */
+.ludoBox {
+    border: 1px solid #11111142;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    font-size: clamp(8px, 1.5vw, 18px);
+}
+
+.ludoBox .fa-location-pin {
+    position: absolute;
+    font-size: 2rem;
+    margin: 2px;
+    transform: translate(0, -40%);
+    -webkit-text-stroke-width: 2px;
+    -webkit-text-stroke-color: white;
+    z-index: 100;
+    animation: animateMyI 0.08s linear;
+}
+
+.ludoBox .fa-star {
+    position: absolute;
+    color: #222;
+    opacity: 0.6;
+}
+
+@keyframes animateMyI {
+    0% { transform: scale(1.1) translate(0, -40%); }
+    100% { transform: scale(1) translate(0, -40%); }
+}
+
+/* Multi Pins in One Box */
+.ludoBox .fa-location-pin:nth-child(2) { transform: translate(10px, -40%); }
+.ludoBox .fa-location-pin:nth-child(3) { transform: translate(-10px, -40%); }
+.ludoBox .fa-location-pin:nth-child(4) { transform: translate(0, -40%) scale(0.8); }
+
+/* Path Colors */
+.redLudoBox { background: var(--red); }
+.greenLudoBox { background: var(--green); }
+.yellowLudoBox { background: var(--yellow); }
+.blueLudoBox { background: var(--blue); }
+
+/* Game Piece Styles */
+.board .piece {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -90%);
+    font-size: 2.3rem;
+    -webkit-text-stroke-width: 2px;
+    -webkit-text-stroke-color: white;
+    z-index: 100;
+}
+
+.board.active {
+    animation: animateBoard 0.8s linear infinite;
+}
+
+@keyframes animateBoard {
+    0% { filter: brightness(1.4); }
+    50% { filter: brightness(1); }
+    100% { filter: brightness(1.4); }
+}
+
+/* Piece Colors */
+.red-piece { color: var(--red); }
+.yellow-piece { color: var(--yellow); }
+.green-piece { color: var(--green); }
+.blue-piece { color: var(--blue); z-index: 100; }
+
+/* Rolling Dice */
+.rollingDice {
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    /* width: 100%; */
+}
+
+.rollingDice img {
+    max-width: 120px;
+    width: 80px;
+    height: 80px;
+    border-radius: 14px;
+    margin-top: 12px;
+    background: #111;
+}
+
+.rollingDice button {
+    margin-top: 10px;
+    border-radius: 4px;
+    background: white;
+    color: #111;
+    border: none;
+    font-family: 'Poppins';
+    cursor: pointer;
+    font-size: clamp(0.85rem, 2vw, 1rem);
+    padding: 8px 16px;
+}
+
+/* Winner Modal */
+#declaredWinner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backdrop-filter: blur(10px);
+    z-index: 9999;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#declaredWinner div {
+    width: 550px;
+    background: #1a1a1a;
+    border-radius: 6px;
+    padding: 20px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 9999 !important;
+    justify-content: center;
+}
+
+#declaredWinner div button {
+    padding: 8px;
+    margin: 10px 0;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    background: #2b2b2b;
+    color: white;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 6px;
+}
+
+canvas {
+    z-index: 99999 !important;
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+    .ludoContainer {
+        gap: 20px;
+        flex-direction: column;
+    }
+    .rollingDice {
+        width: 100%;
+    }
+
+    #ludoBoard {
+        width: 95vmin;
+        height: 95vmin;
+    }
+
+    .rollingDice img {
+        width: 60px;
+        height: 60px;
+    }
+
+    #declaredWinner div {
+        width: 90%;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .ludoBox .fa-location-pin {
+        font-size: 1.2rem;
+    }
+
+    .ludoBox .fa-star {
+        font-size: 0.9rem;
+    }
+
+    .board .piece {
+        font-size: 1.6rem;
+    }
+
+    .rollingDice img {
+        width: 50px;
+        height: 50px;
+    }
+
+    .rollingDice button {
+        font-size: 0.8rem;
+        padding: 6px 10px;
+    }
+}
