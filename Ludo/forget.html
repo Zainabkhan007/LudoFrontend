@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Forgot Password</title>
+  <style>
+    body {
+      background: #1f2937;
+      color: white;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      background: #111827;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      width: 100%;
+      max-width: 400px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    input {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.5rem;
+      margin-bottom: 1rem;
+      border-radius: 4px;
+      border: none;
+      background: #374151;
+      color: white;
+    }
+    button {
+      width: 100%;
+      padding: 0.5rem;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #1d4ed8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Forgot Password</h2>
+    <input type="email" id="reset-email" placeholder="Enter your email" required />
+    <button id="reset-btn">Send Reset Link</button>
+  </div>
+
+  <script>
+    document.getElementById("reset-btn").addEventListener("click", () => {
+      const email = document.getElementById("reset-email").value;
+      if (!email) {
+        alert("Please enter your email.");
+        return;
+      }
+      fetch("https://ludo21.pythonanywhere.com/api/password-reset/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.message) {
+          alert(data.message);
+        } else if (data.error) {
+          alert(data.error);
+        }
+      })
+      .catch(console.error);
+    });
+  </script>
+</body>
+</html>

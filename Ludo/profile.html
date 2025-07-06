@@ -35,6 +35,7 @@
       height: 96px;
       border-radius: 50%;
       border: 2px solid #3b82f6;
+      object-fit: cover;
     }
     .profile-header .status {
       color: #22c55e;
@@ -68,85 +69,112 @@
       align-items: center;
       gap: 0.5rem;
     }
-    .section .reset {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-    .section input {
-      padding: 0.5rem;
-      border-radius: 4px;
-      border: none;
-      background-color: #374151;
-      color: white;
+    .section input[type="file"] {
+      margin-top: 0.5rem;
     }
     .section button {
-      padding: 0.5rem;
-      border: none;
-      border-radius: 4px;
+      margin-top: 0.5rem;
+      background-color: #2563eb;
       color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
       cursor: pointer;
-      font-weight: bold;
     }
-    .section button.reset {
-      background-color: #ef4444;
-    }
-    .section button.reset:hover {
-      background-color: #b91c1c;
+    .section button:hover {
+      background-color: #1d4ed8;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- Profile Header -->
     <div class="profile-header">
-      <h2 id="name">Profile Setting</h2>
+      <img id="profile-img" src="default-avatar.png" alt="profile image" />
       <div>
-        <h2 id="name"></h2>
-        <p id="email" style="color: #9ca3af"></p>
-        <div class="status" id="status"></div>
+        <h2>Profile Settings</h2>
+        <p id="email" style="color: #9ca3af">loading...</p>
+        <div class="status" id="status">🟢 Online</div>
       </div>
     </div>
-
-    <!-- Achievements -->
     <div class="achievements">
       <span class="award">&#127942;</span>
-      <span id="achievements">Enter Your Email BELOW</span>
+      <span id="achievements">Your hard work is awesome!</span>
     </div>
-  
-    <!-- Reset Password -->
     <div class="section">
-      <h3>&#128231; Forgot Password?</h3>
-      <div class="reset">
-        <input type="email" id="reset-email" placeholder='email'  />
-        <button class="reset" id="reset-btn">Send Reset Link to Email</button>
-      </div>
+      <h3>📸 Update Profile Image</h3>
+      <input type="file" id="upload" accept="image/*" />
+      <button id="upload-btn">Upload Image</button>
     </div>
   </div>
 
   <script>
-    
+document.addEventListener("DOMContentLoaded", () => {
+  // Get email from localStorage if exists
+  let userEmail = localStorage.getItem("user_email");
 
-  document.getElementById("reset-btn").addEventListener("click", () => {
-  const email = document.getElementById("reset-email").value;
-  if (!email) {
-    alert("No email available!");
-    return;
-  }
-  fetch("https://ludo21.pythonanywhere.com/api/password-reset/", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: email })
-  })
-  .then((res) => res.json())
-  .then((data) => {
-    if (data.message) {
-      alert(data.message);
-    } else if (data.error) {
-      alert(data.error);
+  if (!userEmail) {
+    userEmail = prompt("Enter your email to manage your profile:");
+    if (!userEmail) {
+      alert("Email is required to use your profile.");
+      window.location.href = "index.html";
+      return;
     }
-  })
-  .catch(console.error);
+    localStorage.setItem("user_email", userEmail);
+  }
+
+  document.getElementById("email").textContent = userEmail;
+
+  // Load profile image if available
+  fetch(`https://ludo21.pythonanywhere.com/api/update_profile_picture/?email=${encodeURIComponent(userEmail)}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.profile_picture) {
+        const imgUrl = data.profile_picture.startsWith("http")
+          ? data.profile_picture
+          : `http://127.0.0.1:8000${data.profile_picture}`;
+        document.getElementById("profile-img").src = imgUrl;
+      }
+    })
+    .catch(console.error);
+
+  // Upload handler
+  document.getElementById("upload-btn").addEventListener("click", () => {
+    const fileInput = document.getElementById("upload");
+    const file = fileInput.files[0];
+    if (!file) {
+      alert("Please select an image file!");
+      return;
+    }
+
+    if (!confirm("Are you sure you want to change your profile picture?")) {
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("profile_picture", file);
+    formData.append("email", userEmail);
+
+    fetch("https://ludo21.pythonanywhere.com/api/update_profile_picture/", {
+      method: "PATCH",
+      body: formData
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.profile_picture) {
+          const imgUrl = data.profile_picture.startsWith("http")
+            ? data.profile_picture
+            : `https://ludo21.pythonanywhere.com${data.profile_picture}`;
+          document.getElementById("profile-img").src = imgUrl + `?t=${Date.now()}`; // bust cache
+          alert("Profile image updated successfully.");
+        } else {
+          alert("Upload failed: " + JSON.stringify(data));
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Something went wrong uploading the image.");
+      });
+  });
 });
   </script>
 </body>

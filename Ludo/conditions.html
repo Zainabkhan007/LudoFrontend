@@ -12,19 +12,30 @@
       color: white;
       display: flex;
       height: 100vh;
+      overflow-x: hidden;
     }
-    aside.sidebar {
+    .sidebar {
       width: 250px;
       background: #111827;
       padding: 20px;
       display: flex;
       flex-direction: column;
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      z-index: 1000;
     }
-    aside.sidebar h1 {
+    .sidebar.active {
+      transform: translateX(0);
+    }
+    .sidebar h1 {
       font-size: 1.5rem;
       margin-bottom: 20px;
     }
-    aside.sidebar button {
+    .sidebar button {
       display: flex;
       align-items: center;
       gap: 8px;
@@ -36,28 +47,52 @@
       cursor: pointer;
       border-radius: 5px;
     }
-    aside.sidebar button:hover {
+    .sidebar button:hover {
       background: #374151;
     }
-    aside.sidebar button.logout {
+    .sidebar button.logout {
       background: #dc2626;
       margin-top: auto;
     }
-    aside.sidebar button.logout:hover {
+    .sidebar button.logout:hover {
       background: #b91c1c;
     }
+
+    .topbar {
+      display: none;
+      background: #111827;
+      color: white;
+      padding: 0 20px;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      height: 70px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1100;
+    }
+    .hamburger {
+      font-size: 1.8rem;
+      cursor: pointer;
+    }
+
     main {
       flex: 1;
       padding: 20px;
+      margin-left: 250px;
       overflow-y: auto;
+      transition: margin-left 0.3s ease;
+      width: 100%;
     }
     h2 {
+      margin-top: 20px;
       margin-bottom: 20px;
       font-size: 2rem;
       font-weight: bold;
     }
     .condition {
-      display: inline-block;
+      display: block;
       background: #374151;
       padding: 10px 15px;
       border-radius: 8px;
@@ -69,34 +104,77 @@
       line-height: 1.6;
       font-size: 1.1rem;
     }
+
+    @media (max-width: 1024px) {
+      .topbar {
+        display: flex;
+      }
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .sidebar.active {
+        transform: translateX(0);
+      }
+      main {
+        margin-left: 0;
+        padding-top: 90px; /* accounts for taller topbar */
+      }
+    }
+
+    @media (max-width: 768px) {
+      h2 {
+        font-size: 1.5rem;
+        margin-right: 32px;
+
+      }
+      p, .condition {
+        font-size: 1rem;
+      }
+    }
   </style>
 </head>
 <body>
-  <aside class="sidebar">
+  <!-- Topbar -->
+  <div class="topbar">
+    <span class="hamburger" id="hamburger">☰</span>
+    <h2>GameHub</h2>
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
     <h1>GameHub Admin</h1>
     <button onclick="window.location.href='dashboard.html'"><span>🏠</span> Dashboard</button>
     <button onclick="window.location.href='gameplay.html'"><span>🎮</span> How to Play</button>
     <button class="logout" id="logoutBtn"><span>🚪</span> Logout</button>
   </aside>
+
+  <!-- Main content -->
   <main>
     <h2>Terms and Conditions</h2>
     <p>
       By using GameHub, you agree to the following:
     </p>
-    <div class="condition">✅ Respect fair play and sportsmanship at all times.</div><br>
-  <div class="condition">✅ Do not use hacks, cheats, bots, or any unauthorized third-party tools.</div><br>
-  <div class="condition">✅ Respect other players, staff, and community members.</div><br>
-  <div class="condition">✅ Violation of these terms may result in temporary suspension or permanent banning.</div><br>
-  <div class="condition">✅ Protect your login credentials; do not share your account.</div><br>
-  <div class="condition">✅ Users must comply with all applicable laws and regulations while using GameHub.</div><br>
-  <div class="condition">✅ Offensive, abusive, or harassing language is strictly prohibited.</div><br>
-  <div class="condition">✅ GameHub reserves the right to modify these terms at any time.</div><br>
-  <div class="condition">✅ You are responsible for keeping your device secure and updated.</div><br>
+    <div class="condition">✅ Respect fair play and sportsmanship at all times.</div>
+    <div class="condition">✅ Do not use hacks, cheats, bots, or any unauthorized third-party tools.</div>
+    <div class="condition">✅ Respect other players, staff, and community members.</div>
+    <div class="condition">✅ Violation of these terms may result in temporary suspension or permanent banning.</div>
+    <div class="condition">✅ Protect your login credentials; do not share your account.</div>
+    <div class="condition">✅ Users must comply with all applicable laws and regulations while using GameHub.</div>
+    <div class="condition">✅ Offensive, abusive, or harassing language is strictly prohibited.</div>
+    <div class="condition">✅ GameHub reserves the right to modify these terms at any time.</div>
+    <div class="condition">✅ You are responsible for keeping your device secure and updated.</div>
     <p>
       Please read our full policy for more details or contact our support team if you have any questions.
     </p>
   </main>
+
   <script>
+    // hamburger toggle
+    document.getElementById("hamburger").addEventListener("click", () => {
+      document.getElementById("sidebar").classList.toggle("active");
+    });
+
+    // logout
     document.getElementById("logoutBtn").addEventListener("click", () => {
       window.location.href = "index.html";
     });

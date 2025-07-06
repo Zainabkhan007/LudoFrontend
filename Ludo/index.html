@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>FaceAttend - Login/Signup</title>
   <style>
-    body { background: #f3f4f6; font-family: sans-serif; }
-    .container { max-width: 400px; margin: auto; background: white; padding: 20px; border-radius: 10px; margin-top: 50px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+    body {  background:linear-gradient(135deg,rgb(61, 56, 66),rgb(59, 62, 66)); font-family: sans-serif; }
+    .container {background:rgba(255, 255, 255, 0.15); max-width: 400px; margin: auto;  padding: 20px; border-radius: 10px; margin-top: 100px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
     .tabs button { flex: 1; padding: 10px; border: none; cursor: pointer; }
-    .tabs button.active { background: #2563eb; color: white; }
-    .tabs button:not(.active) { background: #e5e7eb; color: black; }
+    .tabs button.active { background:rgb(65, 69, 78); color: white; }
+    .tabs button:not(.active) { background:rgb(62, 72, 92); color: black; }
     .form { display: none; }
     .form.active { display: block; }
     input { width: 100%; padding: 8px; margin-top: 5px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; }
@@ -35,6 +35,15 @@
       <input type="email" id="login-email" required>
       <label>Password</label>
       <input type="password" id="login-password" required>
+        <div style="text-align: right; margin-bottom: 10px;">
+
+   <button
+  onclick="window.location.href='forget.html'"
+  style="background: transparent; color: white; border: none; cursor: pointer; font-size: 0.9rem; text-decoration: underline;"
+>
+  Forgot Password?
+</button>
+  </div>
       <button type="submit" class="submit">Login</button>
     </form>
 
@@ -93,28 +102,33 @@
     const loading = document.getElementById('loading');
 
     // LOGIN
-    forms.login.addEventListener('submit', async e => {
-      e.preventDefault();
-      loading.style.display = "block";
-      try {
-        const res = await fetch('https://ludo21.pythonanywhere.com/api/login/', {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: document.getElementById('login-email').value,
-            password: document.getElementById('login-password').value
-          })
-        });
-        if (!res.ok) throw new Error("Login failed");
-        alert("Login successful!");
-        window.location.href = "dashboard.html";
-      } catch (err) {
-        alert(err.message);
-      } finally {
-        loading.style.display = "none";
-      }
+  forms.login.addEventListener('submit', async e => {
+  e.preventDefault();
+  loading.style.display = "block";
+  try {
+    const res = await fetch('https://ludo21.pythonanywhere.com/api/login/', {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: document.getElementById('login-email').value,
+        password: document.getElementById('login-password').value
+      })
     });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Login failed");
+
+    // save token to localStorage
+    localStorage.setItem("token", data.access); // assumes your API returns { token: "xyz" }
+
+    alert("Login successful!");
+    window.location.href = "dashboard.html";
+  } catch (err) {
+    alert(err.message);
+  } finally {
+    loading.style.display = "none";
+  }
+});
+
 
     // SIGNUP
    forms.signup.addEventListener('submit', async e => {

@@ -135,22 +135,24 @@
       }
     }
 
-    function sendMessage() {
-      const input = document.getElementById("messageInput");
-      const text = input.value.trim();
-      if (text !== "") {
-        input.value = "";  // clear input
+  function sendMessage() {
+  const input = document.getElementById("messageInput");
+  const text = input.value.trim();
+  if (text !== "") {
+    input.value = "";  // clear input
 
-        fetch("https://ludo21.pythonanywhere.com/api/send_message/"), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            content: text,
-            username: currentUser
-          })
-        }).catch(err => console.error(err));
-      }
-    }
+    fetch("https://ludo21.pythonanywhere.com/api/send_message/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        content: text,
+        username: currentUser
+      })
+    })
+    .catch(err => console.error(err));
+  }
+}
+
 
     const pusher = new Pusher('4f7a40b6031d990f0233', {
       cluster: 'ap4',
