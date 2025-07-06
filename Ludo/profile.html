@@ -131,7 +131,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (data.profile_picture) {
         const imgUrl = data.profile_picture.startsWith("http")
           ? data.profile_picture
-          : `http://127.0.0.1:8000${data.profile_picture}`;
+          : `https://ludo21.pythonanywhere.com/${data.profile_picture}`;
         document.getElementById("profile-img").src = imgUrl;
       }
     })

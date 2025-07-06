@@ -207,7 +207,7 @@
       document.getElementById("dashboard-user-email").textContent = email;
       const img = document.getElementById("dashboard-profile-img");
       if (data.profile_picture) {
-        img.src = `http://127.0.0.1:8000${data.profile_picture}`;
+        img.src = `https://ludo21.pythonanywhere.com${data.profile_picture}`;
       } else {
         img.src = `https://ludo21.pythonanywhere.com/media/profiles/default-avatar.png`;
       }
@@ -224,8 +224,7 @@
       credentials: "include"
     })
     .then(() => {
-      localStorage.removeItem("email");
-      localStorage.removeItem("token");
+      localStorage.clear()
       window.location.href="index.html"
     })
     .catch(err => console.error("logout failed", err));

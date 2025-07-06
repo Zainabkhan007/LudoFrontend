@@ -102,7 +102,8 @@
     const loading = document.getElementById('loading');
 
     // LOGIN
-  forms.login.addEventListener('submit', async e => {
+// LOGIN
+forms.login.addEventListener('submit', async e => {
   e.preventDefault();
   loading.style.display = "block";
   try {
@@ -117,8 +118,11 @@
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Login failed");
 
-    // save token to localStorage
-    localStorage.setItem("token", data.access); // assumes your API returns { token: "xyz" }
+    // store token
+    localStorage.setItem("token", data.access);
+
+    // store user_email for profile
+    localStorage.setItem("user_email", document.getElementById('login-email').value);
 
     alert("Login successful!");
     window.location.href = "dashboard.html";
@@ -128,6 +132,7 @@
     loading.style.display = "none";
   }
 });
+
 
 
     // SIGNUP

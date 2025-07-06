@@ -35,8 +35,10 @@
     .sidebar h1 {
       font-size: 1.5rem;
       margin-bottom: 20px;
+      margin-left: 30px;
     }
     .sidebar button {
+       margin-left: 30px;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -126,7 +128,6 @@
       .sidebar.active {
         transform: translateX(0);
         margin-top: -5px;
-
       }
       main {
         margin-left: 0;
@@ -140,6 +141,14 @@
       }
       p, ul li {
         font-size: 1rem;
+      }
+    }
+
+    /* desktop: show sidebar by default */
+    @media (min-width: 1025px) {
+      .sidebar {
+        transform: translateX(0);
+        margin-left: -30px;
       }
     }
   </style>

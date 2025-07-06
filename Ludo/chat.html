@@ -35,9 +35,6 @@
       gap: 10px;
       border-bottom: 1px solid #374151;
     }
-    .chat-header img {
-      border-radius: 50%;
-    }
     .chat-messages {
       flex: 1;
       padding: 15px;
@@ -99,7 +96,6 @@
 <body>
   <div class="chat-container">
     <div class="chat-header">
-      
       Chat with Others
     </div>
     <div id="chatMessages" class="chat-messages">
@@ -112,10 +108,26 @@
   </div>
 
   <script>
-    const currentUser = sessionStorage.getItem("currentUsername") || prompt("Enter your username:");
-    sessionStorage.setItem("currentUsername", currentUser);
-
     const chatMessages = document.getElementById("chatMessages");
+    const previousUsername = sessionStorage.getItem("currentUsername");
+    let currentUser = previousUsername;
+
+    if (!currentUser) {
+      currentUser = prompt("Enter your username:");
+      if (!currentUser) {
+        alert("Username is required.");
+        window.location.href = "index.html";
+      } else {
+        sessionStorage.setItem("currentUsername", currentUser);
+        // new user: do NOT load messages
+      }
+    } else {
+      // returning user: load messages
+      loadMessages();
+    }
+
+    // update placeholder with username
+    document.getElementById("messageInput").placeholder = `Message as ${currentUser}`;
 
     async function loadMessages() {
       try {
@@ -135,25 +147,24 @@
       }
     }
 
-  function sendMessage() {
-  const input = document.getElementById("messageInput");
-  const text = input.value.trim();
-  if (text !== "") {
-    input.value = "";  // clear input
+    function sendMessage() {
+      const input = document.getElementById("messageInput");
+      const text = input.value.trim();
+      if (text !== "") {
+        input.value = "";
+        fetch("https://ludo21.pythonanywhere.com/api/send_message/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            content: text,
+            username: currentUser
+          })
+        })
+        .catch(err => console.error(err));
+      }
+    }
 
-    fetch("https://ludo21.pythonanywhere.com/api/send_message/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        content: text,
-        username: currentUser
-      })
-    })
-    .catch(err => console.error(err));
-  }
-}
-
-
+    // Pusher
     const pusher = new Pusher('4f7a40b6031d990f0233', {
       cluster: 'ap4',
       encrypted: true
@@ -169,8 +180,6 @@
       chatMessages.appendChild(el);
       chatMessages.scrollTop = chatMessages.scrollHeight;
     });
-
-    loadMessages();
   </script>
 </body>
 </html>
