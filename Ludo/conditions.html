@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GameHub - Terms and Conditions</title>
+  <style>
+    body {
+      margin: 0;
+      background: #1f2937;
+      font-family: Arial, sans-serif;
+      color: white;
+      display: flex;
+      height: 100vh;
+    }
+    aside.sidebar {
+      width: 250px;
+      background: #111827;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    aside.sidebar h1 {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+    }
+    aside.sidebar button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      color: white;
+      border: none;
+      padding: 10px;
+      margin-bottom: 5px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    aside.sidebar button:hover {
+      background: #374151;
+    }
+    aside.sidebar button.logout {
+      background: #dc2626;
+      margin-top: auto;
+    }
+    aside.sidebar button.logout:hover {
+      background: #b91c1c;
+    }
+    main {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    h2 {
+      margin-bottom: 20px;
+      font-size: 2rem;
+      font-weight: bold;
+    }
+    .condition {
+      display: inline-block;
+      background: #374151;
+      padding: 10px 15px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      font-size: 1rem;
+      font-weight: bold;
+    }
+    p {
+      line-height: 1.6;
+      font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <h1>GameHub Admin</h1>
+    <button onclick="window.location.href='dashboard.html'"><span>🏠</span> Dashboard</button>
+    <button onclick="window.location.href='gameplay.html'"><span>🎮</span> How to Play</button>
+    <button class="logout" id="logoutBtn"><span>🚪</span> Logout</button>
+  </aside>
+  <main>
+    <h2>Terms and Conditions</h2>
+    <p>
+      By using GameHub, you agree to the following:
+    </p>
+    <div class="condition">✅ Respect fair play and sportsmanship at all times.</div><br>
+  <div class="condition">✅ Do not use hacks, cheats, bots, or any unauthorized third-party tools.</div><br>
+  <div class="condition">✅ Respect other players, staff, and community members.</div><br>
+  <div class="condition">✅ Violation of these terms may result in temporary suspension or permanent banning.</div><br>
+  <div class="condition">✅ Protect your login credentials; do not share your account.</div><br>
+  <div class="condition">✅ Users must comply with all applicable laws and regulations while using GameHub.</div><br>
+  <div class="condition">✅ Offensive, abusive, or harassing language is strictly prohibited.</div><br>
+  <div class="condition">✅ GameHub reserves the right to modify these terms at any time.</div><br>
+  <div class="condition">✅ You are responsible for keeping your device secure and updated.</div><br>
+    <p>
+      Please read our full policy for more details or contact our support team if you have any questions.
+    </p>
+  </main>
+  <script>
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      window.location.href = "index.html";
+    });
+  </script>
+</body>
+</html>

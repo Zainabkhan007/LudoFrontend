@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GameHub - How to Play</title>
+  <style>
+    body {
+      margin: 0;
+      background: #1f2937;
+      font-family: Arial, sans-serif;
+      color: white;
+      display: flex;
+      height: 100vh;
+    }
+    aside.sidebar {
+      width: 250px;
+      background: #111827;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    aside.sidebar h1 {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+    }
+    aside.sidebar button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      color: white;
+      border: none;
+      padding: 10px;
+      margin-bottom: 5px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    aside.sidebar button:hover {
+      background: #374151;
+    }
+    aside.sidebar button.logout {
+      background: #dc2626;
+      margin-top: auto;
+    }
+    aside.sidebar button.logout:hover {
+      background: #b91c1c;
+    }
+    main {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    h2 {
+      margin-bottom: 20px;
+      font-size: 2rem;
+    }
+    p {
+      line-height: 1.6;
+      font-size: 1.1rem;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    ul li {
+      background: #374151;
+      padding: 12px 16px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 1.1rem;
+      cursor: default;
+      transition: background 0.3s;
+    }
+    ul li:hover {
+      background: #4b5563;
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <h1>GameHub Admin</h1>
+    <button onclick="window.location.href='dashboard.html'"><span>🏠</span> Dashboard</button>
+    <button onclick="window.location.href='conditions.html'"><span>📄</span> Terms</button>
+    <button class="logout" id="logoutBtn"><span>🚪</span> Logout</button>
+  </aside>
+  <main>
+    <h2>How to Play</h2>
+    <p>
+      Welcome to GameHub! Here’s how to get started:
+    </p>
+    <ul>
+      <li>Login to your GameHub account.</li>
+      <li>Select the game you want to play from the dashboard.</li>
+      <li>Follow the on-screen instructions to start a match.</li>
+
+
+      <li>You can select your color (for example, red, blue, green, or yellow in Ludo), set time limits, and other game rules before starting.</li>
+      <li>Remember to follow fair play, be respectful to others, and enjoy the challenge!</li>
+
+
+      <li>Enjoy and have fun!</li>
+    </ul>
+    <p>
+      If you have questions, please contact our support team.
+    </p>
+  </main>
+  <script>
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      window.location.href = "index.html";
+    });
+  </script>
+</body>
+</html>

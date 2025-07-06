@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Profile Settings</title>
+  <style>
+    body {
+      background-color: #1f2937;
+      color: white;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .container {
+      background-color: #111827;
+      border-radius: 12px;
+      margin: 2rem;
+      padding: 2rem;
+      width: 100%;
+      max-width: 800px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+    .profile-header {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+    .profile-header img {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      border: 2px solid #3b82f6;
+    }
+    .profile-header .status {
+      color: #22c55e;
+      margin-top: 0.5rem;
+      display: flex;
+      align-items: center;
+    }
+    .achievements {
+      background-color: #1d4ed8;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .achievements .award {
+      color: #facc15;
+      font-size: 1.5rem;
+    }
+    .section {
+      background-color: #1f2937;
+      border-radius: 8px;
+      margin-top: 2rem;
+      padding: 1rem;
+    }
+    .section h3 {
+      margin-bottom: 1rem;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .section .reset {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .section input {
+      padding: 0.5rem;
+      border-radius: 4px;
+      border: none;
+      background-color: #374151;
+      color: white;
+    }
+    .section button {
+      padding: 0.5rem;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .section button.reset {
+      background-color: #ef4444;
+    }
+    .section button.reset:hover {
+      background-color: #b91c1c;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Profile Header -->
+    <div class="profile-header">
+      <h2 id="name">Profile Setting</h2>
+      <div>
+        <h2 id="name"></h2>
+        <p id="email" style="color: #9ca3af"></p>
+        <div class="status" id="status"></div>
+      </div>
+    </div>
+
+    <!-- Achievements -->
+    <div class="achievements">
+      <span class="award">&#127942;</span>
+      <span id="achievements">Enter Your Email BELOW</span>
+    </div>
+  
+    <!-- Reset Password -->
+    <div class="section">
+      <h3>&#128231; Forgot Password?</h3>
+      <div class="reset">
+        <input type="email" id="reset-email" placeholder='email'  />
+        <button class="reset" id="reset-btn">Send Reset Link to Email</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    
+
+  document.getElementById("reset-btn").addEventListener("click", () => {
+  const email = document.getElementById("reset-email").value;
+  if (!email) {
+    alert("No email available!");
+    return;
+  }
+  fetch("https://ludo21.pythonanywhere.com/api/password-reset/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: email })
+  })
+  .then((res) => res.json())
+  .then((data) => {
+    if (data.message) {
+      alert(data.message);
+    } else if (data.error) {
+      alert(data.error);
+    }
+  })
+  .catch(console.error);
+});
+  </script>
+</body>
+</html>

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel - GameHub</title>
+  <style>
+    body {
+      margin: 0;
+      background: #1f2937;
+      font-family: Arial, sans-serif;
+      color: white;
+      display: flex;
+      height: 100vh;
+    }
+    aside.sidebar {
+      width: 250px;
+      background: #111827;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    aside.sidebar h1 {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+    }
+    aside.sidebar button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      color: white;
+      border: none;
+      padding: 10px;
+      margin-bottom: 5px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    aside.sidebar button:hover {
+      background: #374151;
+    }
+    aside.sidebar button.logout {
+      background: #dc2626;
+      margin-top: auto;
+    }
+    aside.sidebar button.logout:hover {
+      background: #b91c1c;
+    }
+
+    main {
+      flex: 1;
+      background: #1f2937;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    main h2 {
+      margin-bottom: 20px;
+    }
+    .table-container {
+      background: #374151;
+      border-radius: 10px;
+      padding: 15px;
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #4b5563;
+      text-align: left;
+    }
+    th {
+      background: #111827;
+    }
+    td button {
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+    td button.block {
+      background: #facc15;
+      color: black;
+    }
+    td button.block:hover {
+      background: #eab308;
+    }
+    td button.delete {
+      background: #dc2626;
+      color: white;
+    }
+    td button.delete:hover {
+      background: #b91c1c;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 5px;
+      font-size: 0.8rem;
+    }
+    .status-active {
+      background: green;
+      color: white;
+    }
+    .status-offline {
+      background: red;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <h1>GameHub Admin</h1>
+    <button  onclick="window.location.href='dashboard.html'"><span>🏠</span> Dashboard</button>
+    <button  onclick="window.location.href='ludo.html'"><span>👥</span> Play Now</button> 
+    <!-- <button><span>📊</span> Reports</button> -->
+    <!-- <button><span>⚙️</span> Settings</button> -->
+    <button class="logout" id="logoutBtn"><span>🚪</span> Logout</button>
+  </aside>
+
+  <!-- Main -->
+  <main>
+    <h2>All Users</h2>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="userList"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      loadUsers();
+      document.getElementById("logoutBtn").addEventListener("click", handleLogout);
+    });
+
+    async function loadUsers() {
+      try {
+        // get all users
+        const res = await fetch("https://ludo21.pythonanywhere.com/api/list_users/", {
+          credentials: "include",
+        });
+        if (!res.ok) throw new Error("Could not load users");
+        const users = await res.json();
+
+        // get active users
+        const activeRes = await fetch("https://ludo21.pythonanywhere.com/api/active_users/", {
+          credentials: "include",
+        });
+        if (!activeRes.ok) throw new Error("Could not load active users");
+        const activeUsers = await activeRes.json();
+        const activeUserIds = activeUsers.map(u => u.id);
+
+        const list = document.getElementById("userList");
+        list.innerHTML = "";
+        users.forEach(user => {
+          const isActive = activeUserIds.includes(user.id);
+          const statusBadge = isActive
+            ? `<span class="status-badge status-active">Active</span>`
+            : `<span class="status-badge status-offline">Offline</span>`;
+
+          list.innerHTML += `
+            <tr>
+              <td>${user.id}</td>
+              <td>${user.name}</td>
+              <td>${user.email}</td>
+              <td>${statusBadge}</td>
+              <td>
+                <button class="block" onclick="blockUser(${user.id})">Block</button>
+                <button class="delete" onclick="deleteUser(${user.id})">Delete</button>
+              </td>
+            </tr>
+          `;
+        });
+      } catch (err) {
+        alert("Error loading users: " + err.message);
+      }
+    }
+
+    async function blockUser(userId) {
+      if (!confirm("Are you sure to block/unblock this user?")) return;
+      try {
+        const res = await fetch(`https://ludo21.pythonanywhere.com/api/block_user/${userId}/`, {
+          method: "POST",
+          credentials: "include",
+        });
+        if (!res.ok) throw new Error("Block failed");
+        alert("User updated");
+        loadUsers();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function deleteUser(userId) {
+      if (!confirm("Are you sure to delete this user?")) return;
+      try {
+        const res = await fetch(`https://ludo21.pythonanywhere.com/api/delete_user/${userId}/`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+        if (!res.ok) throw new Error("Delete failed");
+        alert("User deleted");
+        loadUsers();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function handleLogout() {
+      try {
+        await fetch("https://ludo21.pythonanywhere.com/api/logout/", { credentials: "include" });
+        window.location.href = "index.html";
+      } catch (err) {
+        alert("Logout failed");
+      }
+    }
+  </script>
+</body>
+</html>

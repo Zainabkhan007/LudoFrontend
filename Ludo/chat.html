@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GameHub Chat</title>
+  <style>
+    body {
+      margin: 0;
+      background: #1f2937;
+      font-family: Arial, sans-serif;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .chat-container {
+      width: 100%;
+      max-width: 500px;
+      height: 650px;
+      background: #111827;
+      border-radius: 15px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+    .chat-header {
+      background: #1f2937;
+      padding: 15px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid #374151;
+    }
+    .chat-header img {
+      border-radius: 50%;
+    }
+    .chat-messages {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      background: #1f2937;
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-message {
+      margin-bottom: 15px;
+      max-width: 80%;
+      word-wrap: break-word;
+      padding: 10px 15px;
+      border-radius: 10px;
+    }
+    .chat-message.user {
+      background: #4338ca;
+      align-self: flex-end;
+      text-align: right;
+    }
+    .chat-message.bot {
+      background: #374151;
+      align-self: flex-start;
+      text-align: left;
+    }
+    .chat-footer {
+      padding: 10px;
+      background: #111827;
+      border-top: 1px solid #374151;
+      display: flex;
+      gap: 8px;
+    }
+    .chat-footer input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #374151;
+      background: #1f2937;
+      color: white;
+    }
+    .chat-footer input::placeholder {
+      color: #9ca3af;
+    }
+    .chat-footer button {
+      background: #4338ca;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 15px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .chat-footer button:hover {
+      background: #4f46e5;
+    }
+  </style>
+  <script src="https://js.pusher.com/8.2/pusher.min.js"></script>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      
+      Chat with Others
+    </div>
+    <div id="chatMessages" class="chat-messages">
+      <div class="chat-message bot">Hello there! How can I help you today?</div>
+    </div>
+    <div class="chat-footer">
+      <input type="text" id="messageInput" placeholder="Type your message...">
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const currentUser = sessionStorage.getItem("currentUsername") || prompt("Enter your username:");
+    sessionStorage.setItem("currentUsername", currentUser);
+
+    const chatMessages = document.getElementById("chatMessages");
+
+    async function loadMessages() {
+      try {
+        const res = await fetch("https://ludo21.pythonanywhere.com/api/get_messages/");
+        const messages = await res.json();
+        messages.forEach(m => {
+          const el = document.createElement("div");
+          el.className = m.username === currentUser ? "chat-message user" : "chat-message bot";
+          el.textContent = m.username === currentUser
+            ? `You: ${m.message}`
+            : `${m.username}: ${m.message}`;
+          chatMessages.appendChild(el);
+        });
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      } catch (err) {
+        console.error("Failed to load messages", err);
+      }
+    }
+
+    function sendMessage() {
+      const input = document.getElementById("messageInput");
+      const text = input.value.trim();
+      if (text !== "") {
+        input.value = "";  // clear input
+
+        fetch("https://ludo21.pythonanywhere.com/api/send_message/"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            content: text,
+            username: currentUser
+          })
+        }).catch(err => console.error(err));
+      }
+    }
+
+    const pusher = new Pusher('4f7a40b6031d990f0233', {
+      cluster: 'ap4',
+      encrypted: true
+    });
+
+    const channel = pusher.subscribe('public-chat');
+    channel.bind('new-message', function(data) {
+      const el = document.createElement("div");
+      el.className = data.username === currentUser ? "chat-message user" : "chat-message bot";
+      el.textContent = data.username === currentUser
+        ? `You: ${data.message}`
+        : `${data.username}: ${data.message}`;
+      chatMessages.appendChild(el);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
+
+    loadMessages();
+  </script>
+</body>
+</html>
