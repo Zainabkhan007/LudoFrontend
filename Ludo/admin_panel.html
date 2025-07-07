@@ -13,12 +13,15 @@
       display: flex;
       height: 100vh;
     }
+
+    /* Sidebar */
     aside.sidebar {
       width: 250px;
       background: #111827;
       padding: 20px;
       display: flex;
       flex-direction: column;
+      transition: transform 0.3s ease;
     }
     aside.sidebar h1 {
       font-size: 1.5rem;
@@ -47,6 +50,7 @@
       background: #b91c1c;
     }
 
+    /* Main */
     main {
       flex: 1;
       background: #1f2937;
@@ -91,9 +95,11 @@
     td button.delete {
       background: #dc2626;
       color: white;
+      margin-top: 14px;
     }
     td button.delete:hover {
       background: #b91c1c;
+      
     }
     .status-badge {
       display: inline-block;
@@ -109,17 +115,56 @@
       background: red;
       color: white;
     }
+
+    /* Mobile Menu */
+    .hamburger {
+      display: none;
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      font-size: 1.5rem;
+      cursor: pointer;
+      z-index: 999;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+
+      .hamburger {
+        display: block;
+      }
+
+      aside.sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100%;
+        transform: translateX(-100%);
+        z-index: 998;
+      }
+
+      aside.sidebar.open {
+        transform: translateX(0);
+      }
+
+      main {
+        padding-top: 60px;
+      }
+    }
   </style>
 </head>
 <body>
 
+  <!-- Hamburger Button -->
+  <div class="hamburger" onclick="toggleSidebar()">☰</div>
+
   <!-- Sidebar -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <h1>GameHub Admin</h1>
-    <button  onclick="window.location.href='dashboard.html'"><span>🏠</span> Dashboard</button>
-    <button  onclick="window.location.href='ludo.html'"><span>👥</span> Play Now</button> 
-    <!-- <button><span>📊</span> Reports</button> -->
-    <!-- <button><span>⚙️</span> Settings</button> -->
+    <button onclick="window.location.href='dashboard.html'"><span>🏠</span> Dashboard</button>
+    <button onclick="window.location.href='ludo.html'"><span>👥</span> Play Now</button> 
     <button class="logout" id="logoutBtn"><span>🚪</span> Logout</button>
   </aside>
 
@@ -143,6 +188,12 @@
   </main>
 
   <script>
+    const sidebar = document.getElementById("sidebar");
+
+    function toggleSidebar() {
+      sidebar.classList.toggle("open");
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
       loadUsers();
       document.getElementById("logoutBtn").addEventListener("click", handleLogout);
@@ -150,14 +201,12 @@
 
     async function loadUsers() {
       try {
-        // get all users
         const res = await fetch("https://ludo21.pythonanywhere.com/api/list_users/", {
           credentials: "include",
         });
         if (!res.ok) throw new Error("Could not load users");
         const users = await res.json();
 
-        // get active users
         const activeRes = await fetch("https://ludo21.pythonanywhere.com/api/active_users/", {
           credentials: "include",
         });
