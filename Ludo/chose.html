@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Select Player</title>
+  <style>
+    body {
+      background: #1f2937;
+      font-family: sans-serif;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    .color-buttons button {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 18px;
+      border: none;
+      cursor: pointer;
+      border-radius: 8px;
+    }
+    .blue { background-color: #3b82f6; }
+    .red { background-color: #ef4444; }
+    .green { background-color: #22c55e; }
+    .yellow { background-color: #facc15; color: black; }
+  </style>
+</head>
+<body>
+  <h1>Select Your Color</h1>
+  <div class="color-buttons">
+    <button class="blue" onclick="selectColor('blue')">Blue</button>
+    <button class="red" onclick="selectColor('red')">Red</button>
+    <button class="green" onclick="selectColor('green')">Green</button>
+    <button class="yellow" onclick="selectColor('yellow')">Yellow</button>
+  </div>
+
+  <script>
+    function selectColor(color) {
+      localStorage.setItem('playerColor', color);
+      window.location.href = 'ludo.html'; // redirect to actual game
+    }
+  </script>
+</body>
+</html>

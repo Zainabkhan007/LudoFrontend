@@ -1,241 +1,310 @@
-// Pusher
-const pusher = new Pusher("4f7a40b6031d990f0233", { cluster: "ap4" });
-const channel = pusher.subscribe("game-channel");
+const userSelectedColor = localStorage.getItem('playerColor') || 'blue';
 
-// DOM
-const rollDiceButton = document.getElementById("rollDiceButton");
-const rollDice = document.getElementById("rollDice");
+const blue_Board = document.getElementById("blue-Board");
+const green_Board = document.getElementById("green-Board");
+const red_Board = document.getElementById("red-Board");
+const yellow_Board = document.getElementById("yellow-Board");
 
-const blueBoard = document.getElementById("blue-Board");
-const redBoard = document.getElementById("red-Board");
-const greenBoard = document.getElementById("green-Board");
-const yellowBoard = document.getElementById("yellow-Board");
+const diceImages = {
+    blue: document.getElementById('dice-blue'),
+    red: document.getElementById('dice-red'),
+    green: document.getElementById('dice-green'),
+    yellow: document.getElementById('dice-yellow')
+};
 
-// path
-const pathArray = [
-  "r1","r2","r3","r4","r5","r6","r7","r8","r9","r10","r11","r12","r13",
-  "g1","g2","g3","g4","g5","g6","g7","g8","g9","g10","g11","g12","g13",
-  "y1","y2","y3","y4","y5","y6","y7","y8","y9","y10","y11","y12","y13",
-  "b1","b2","b3","b4","b5","b6","b7","b8","b9","b10","b11","b12","b13"
-];
+const rollButtons = {
+    blue: createRollButton('blue'),
+    red: createRollButton('red'),
+    green: createRollButton('green'),
+    yellow: createRollButton('yellow')
+};
 
-const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+// Attach roll buttons under each dice
+for (const color in rollButtons) {
+    diceImages[color].parentElement.appendChild(rollButtons[color]);
+}
 
-let numPlayers = 4;
-let playerOrder = ["blue","red","green","yellow"].slice(0,numPlayers);
+function createRollButton(color) {
+    const btn = document.createElement('button');
+    btn.textContent = 'ROLL';
+    btn.classList.add('team-roll-btn');
+    btn.style.marginTop = '8px';
+    btn.style.padding = '6px 12px';
+    btn.disabled = true;
+    btn.addEventListener('click', () => handleRoll(color));
+    return btn;
+}
+
+let playerTurns = [];
 let currentPlayerTurnIndex = 0;
-let currentPlayerTurnStatus = false;
+let currentPlayerTurnStatus = true;
+let teamHasBonus = false;
 let diceResult;
 
-let gameCode = window.gameCode || "ABC123";
-let yourColor = window.yourColor || "blue";
+const pathArray = [
+    "b1", "b2", "b3", "b4", "b5", "b6",
+    "b7", "b8", "b9", "b10", "b11", "b12", "b13",
+    "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10", "r11", "r12", "r13",
+    "g1", "g2", "g3", "g4", "g5", "g6", "g7", "g8", "g9", "g10", "g11", "g12", "g13",
+    "y1", "y2", "y3", "y4", "y5", "y6", "y7", "y8", "y9", "y10", "y11", "y12", "y13"
+];
+const safePaths = ["b9", "r9", "g9", "y9"];
 
-// Piece class
-class PlayerPiece {
-  constructor(team, id, homeEntry, gameEntry) {
-    this.team = team;
-    this.id = id;
-    this.homeEntry = homeEntry;
-    this.gameEntry = gameEntry;
-    this.position = id + "_home";
-    this.status = 0;
-  }
+class Player_Piece {
+    constructor(team, id, status, homeEntry, piece_id, entry) {
+        this.team = team;
+        this.id = id;
+        this.status = status;
+        this.homeEntry = homeEntry;
+        this.position = null;
+        this.piece_id = piece_id;
+        this.entry = entry;
+    }
 
-  unlock() {
-    this.status = 1;
-    this.position = this.gameEntry;
-    const el = document.querySelector(`[piece_id="${this.id}"]`);
-    document.getElementById(this.gameEntry).appendChild(el);
-  }
+    unlockPiece() {
+        this.status = 1;
+        this.position = this.entry;
+        document.getElementById(this.entry).appendChild(document.querySelector(`[piece_id="${this.piece_id}"]`));
+    }
 
-  update(pos) {
-    this.position = pos;
-  }
+    movePiece(array) {
+        array.forEach((pos, idx) => {
+            setTimeout(() => {
+                const el = document.querySelector(`[piece_id="${this.piece_id}"]`);
+                document.getElementById(pos).appendChild(el);
+                this.position = pos;
+            }, idx * 175);
+        });
+    }
+
+    sentMeToBoard() {
+        this.status = 0;
+        this.position = null;
+        const homeSpan = document.getElementById(this.id);
+        const piece = document.querySelector(`[piece_id="${this.piece_id}"]`);
+        if (homeSpan && piece) homeSpan.appendChild(piece);
+    }
 }
 
 let playerPieces = [];
-
-const boards = [
-  { team:"blue", board:blueBoard, homeEntry:"y13", gameEntry:"b1" },
-  { team:"red", board:redBoard, homeEntry:"b13", gameEntry:"r1" },
-  { team:"green", board:greenBoard, homeEntry:"r13", gameEntry:"g1" },
-  { team:"yellow", board:yellowBoard, homeEntry:"g13", gameEntry:"y1" }
+const boardDetails = [
+    { boardColor: 'blue', board: blue_Board, homeEntry: 'y13', gameEntry: 'b1' },
+    { boardColor: 'green', board: green_Board, homeEntry: 'r13', gameEntry: 'g1' },
+    { boardColor: 'red', board: red_Board, homeEntry: 'b13', gameEntry: 'r1' },
+    { boardColor: 'yellow', board: yellow_Board, homeEntry: 'g13', gameEntry: 'y1' }
 ];
 
-boards.forEach(({team, board, homeEntry, gameEntry})=>{
-  if (!playerOrder.includes(team)) return;
-  const container = document.createElement("div");
-  for(let i=0; i<4; i++){
-    const span = document.createElement("span");
-    const icon = document.createElement("i");
-    icon.classList.add("fa-solid","fa-location-pin","piece",`${team}-piece`);
-    icon.setAttribute("piece_id", `${team}${i}`);
-    span.appendChild(icon);
-    span.id = `${team}${i}_home`;
-    container.appendChild(span);
-    playerPieces.push(new PlayerPiece(team, `${team}${i}`, homeEntry, gameEntry));
-  }
-  board.appendChild(container);
-});
+for (let i = 0; i < boardDetails.length; i++) {
+    const { boardColor, board, homeEntry, gameEntry } = boardDetails[i];
+    const parentDiv = document.createElement('div');
 
-// highlight
-function updateHighlight(){
-  playerOrder.forEach(color=>{
-    document.getElementById(`${color}-Board`).style.border = "2px solid transparent";
-  });
-  document.getElementById(`${playerOrder[currentPlayerTurnIndex]}-Board`).style.border = "4px solid gold";
-}
+    for (let j = 0; j < 4; j++) {
+        const span = document.createElement('span');
+        const icon = document.createElement('i');
+        icon.classList.add('fa-solid', 'fa-location-pin', 'piece', `${boardColor}-piece`);
+        icon.setAttribute('piece_id', `${boardColor}${j}`);
 
-// next turn
-function nextTurn(){
-  currentPlayerTurnIndex = (currentPlayerTurnIndex + 1) % playerOrder.length;
-  currentPlayerTurnStatus = playerOrder[currentPlayerTurnIndex] === yourColor;
-  updateHighlight();
-}
+        if (boardColor === userSelectedColor) {
+            icon.setAttribute('myPieceNum', j + 1);
+            icon.addEventListener('click', (e) => turnForUser(e));
+        }
 
-// APIs
-async function movePieceAPI(pieceId, pos) {
-  await fetch(`https://ludo21.pythonanywhere.com/api/move-piece/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      piece_id: pieceId,
-      position: pos,
-      game_code: gameCode
-    }),
-  });
-}
-
-// move
-async function movePiece(piece, arr){
-  arr.forEach((pos,i)=>{
-    setTimeout(()=>{
-      piece.update(pos);
-      document.getElementById(pos).appendChild(
-        document.querySelector(`[piece_id="${piece.id}"]`)
-      );
-    }, i*300);
-  });
-  await delay(arr.length*300);
-}
-
-// turn
-async function turnForUser(e){
-  if (!currentPlayerTurnStatus) return;
-
-  const currentTeam = playerOrder[currentPlayerTurnIndex];
-  const id = e.target.getAttribute("piece_id");
-  const piece = playerPieces.find(p => p.id === id);
-
-  if (!piece || piece.team !== currentTeam) return;
-
-  // agar piece band hai
-  if (piece.status === 0) {
-    if (diceResult === 6) {
-      piece.unlock();
-      await movePieceAPI(piece.id, piece.gameEntry);
-
-      // allow same player to roll again
-      currentPlayerTurnStatus = true;
-      return;
-    } else {
-      alert("Need 6 to unlock!");
-      const next = playerOrder[(currentPlayerTurnIndex + 1) % playerOrder.length];
-      channel.trigger("client-turn-changed", {
-        currentPlayer: next,
-      });
-      nextTurn();
-      return;
+        const player = new Player_Piece(boardColor, `${j}_${boardColor}`, 0, homeEntry, `${boardColor}${j}`, gameEntry);
+        playerPieces.push(player);
+        span.setAttribute('id', `${j}_${boardColor}`);
+        span.append(icon);
+        parentDiv.append(span);
     }
-  }
 
-  // agar piece already open hai
-  let idx = pathArray.indexOf(piece.position);
-  if (idx === -1) return;
-
-  let path = [];
-  for (let i = 1; i <= diceResult; i++) {
-    path.push(pathArray[(idx + i) % pathArray.length]);
-  }
-
-  await movePiece(piece, path);
-  await movePieceAPI(piece.id, path[path.length - 1]);
-
-  if (diceResult === 6) {
-    // 6 ke baad chance again
-    currentPlayerTurnStatus = true;
-  } else {
-    // ab turn doosre ko do
-    const next = playerOrder[(currentPlayerTurnIndex + 1) % playerOrder.length];
-    channel.trigger("client-turn-changed", {
-      currentPlayer: next,
-    });
-    nextTurn();
-  }
+    board.append(parentDiv);
 }
 
+playerTurns = boardDetails.map(obj => obj.boardColor);
+currentPlayerTurnIndex = playerTurns.indexOf(userSelectedColor);
 
-// dice button
-rollDiceButton.addEventListener("click", async () => {
-  if (!currentPlayerTurnStatus) {
-    console.log("Not your turn!");
-    return;
-  }
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-  rollDice.src = "./Assets/rollDice.gif";
-  await delay(600);
-  diceResult = Math.floor(Math.random() * 6) + 1;
-  console.log("Dice result (frontend):", diceResult);
-  rollDice.src = `./Assets/Dice_${diceResult}.png`;
+const setPlayerTurn = (i) => {
+    document.querySelectorAll('.board').forEach(b => b.classList.remove('active'));
+    Object.keys(rollButtons).forEach(color => {
+        rollButtons[color].disabled = color !== playerTurns[i];
+    });
 
-  // broadcast
-  channel.trigger("client-dice-rolled", {
-    dice: diceResult,
-    player: yourColor
-  });
+    const current = playerTurns[i];
+    const boardObj = boardDetails.find(obj => obj.boardColor === current);
+    boardObj?.board?.classList.add('active');
+};
 
-  // no turn change here
-});
- // <-- ye closing bracket zaroori thi
+setPlayerTurn(currentPlayerTurnIndex);
 
+const nextTeamTurn = async () => {
+    currentPlayerTurnIndex = (currentPlayerTurnIndex + 1) % playerTurns.length;
+    setPlayerTurn(currentPlayerTurnIndex);
+    await delay(500);
 
-// piece clicks
-document.addEventListener("click", e=>{
-  if (e.target.classList.contains("piece")){
-    turnForUser(e);
-  }
-});
+    if (playerTurns[currentPlayerTurnIndex] !== userSelectedColor) {
+        rollDiceButtonForBot();
+    }
+};
 
-// pusher events
-channel.bind("client-dice-rolled", data=>{
-  console.log("dice rolled received", data);
-  diceResult = data.dice;
-  rollDice.src = `./Assets/Dice_${diceResult}.png`;
-  currentPlayerTurnStatus = (data.player === yourColor);
-});
+function giveArrayForMovingPath(piece) {
+    const moveArray = [];
 
-channel.bind("client-turn-changed", data=>{
-  console.log("turn changed received", data);
-  currentPlayerTurnIndex = playerOrder.indexOf(data.currentPlayer);
-  currentPlayerTurnStatus = (data.currentPlayer === yourColor);
-  updateHighlight();
-  // currentPlayerTurnStatus = true; 
-  
-});
+    if (piece.status === 0 && diceResult === 6) {
+        moveArray.push(piece.entry);
+        return moveArray;
+    }
 
-channel.bind("piece-moved", data=>{
-  const pieceId = data.payload.pieceId;
-  const pos = data.payload.position;
-  const piece = playerPieces.find(p => p.id === pieceId);
-  if (piece) {
-    piece.update(pos);
-    document.getElementById(pos).appendChild(
-      document.querySelector(`[piece_id="${piece.id}"]`)
+    if (piece.status === 1 && piece.position) {
+        const currentIndex = pathArray.indexOf(piece.position);
+        if (currentIndex === -1) return [];
+
+        const targetIndex = currentIndex + diceResult;
+        if (targetIndex >= pathArray.length) return [];
+
+        for (let i = currentIndex + 1; i <= targetIndex; i++) {
+            moveArray.push(pathArray[i]);
+        }
+    }
+
+    return moveArray;
+}
+
+const turnForUser = async (e) => {
+    const currentTeam = playerTurns[currentPlayerTurnIndex];
+    if (currentTeam !== userSelectedColor || !currentPlayerTurnStatus) return;
+
+    const piece = playerPieces.find(
+        p => p.piece_id === e.target.getAttribute('piece_id') && p.team === currentTeam
     );
-  }
-});
 
-// highlight start
-updateHighlight();
-currentPlayerTurnStatus = playerOrder[currentPlayerTurnIndex] === yourColor;
-currentPlayerTurnStatus = true; 
+    if (!piece) return;
+
+    const array = giveArrayForMovingPath(piece);
+    if (array.length === 0) return;
+
+    currentPlayerTurnStatus = false;
+
+    const opponents = playerPieces.filter(p => p.team !== currentTeam && p.status === 1);
+    const cut = opponents.find(p => p.position === array[array.length - 1] && !safePaths.includes(p.position));
+
+    if (cut) {
+        piece.movePiece(array);
+        await delay(array.length * 175);
+        cut.sentMeToBoard();
+        currentPlayerTurnStatus = true;
+        if (diceResult === 6) return;
+        nextTeamTurn();
+        return;
+    }
+
+    if (piece.status === 0 && diceResult === 6) {
+        piece.unlockPiece();
+        await delay(400);
+        currentPlayerTurnStatus = true;
+        return;
+    }
+
+    if (piece.status === 1 && array.length > 0) {
+        piece.movePiece(array);
+        await delay(array.length * 175);
+        currentPlayerTurnStatus = true;
+        if (diceResult !== 6) {
+            nextTeamTurn();
+        }
+        return;
+    }
+
+    currentPlayerTurnStatus = true;
+};
+
+const rollDiceGif = new Image();
+rollDiceGif.src = `./Assets/rollDice.gif`;
+
+async function handleRoll(color) {
+    const currentTeam = playerTurns[currentPlayerTurnIndex];
+    if (color !== currentTeam || !currentPlayerTurnStatus) return;
+
+    rollButtons[color].disabled = true;
+    diceImages[color].src = rollDiceGif.src;
+
+    diceResult = Math.floor(Math.random() * 6) + 1;
+    teamHasBonus = (diceResult === 6);
+    currentPlayerTurnStatus = true;
+
+    setTimeout(async () => {
+        diceImages[color].src = `./Assets/Dice_${diceResult}.png`;
+        await delay(700);
+
+        const totalUnlocked = playerPieces.filter(obj => obj.team === currentTeam && obj.status === 1);
+        if (diceResult !== 6 && totalUnlocked.length === 0) {
+            await delay(500);
+            currentPlayerTurnStatus = true;
+            nextTeamTurn();
+        }
+    }, 600);
+}
+
+function turnForBot() {
+    const currentTeam = playerTurns[currentPlayerTurnIndex];
+    const botPieces = playerPieces.filter(p => p.team === currentTeam);
+    const unlockedPieces = botPieces.filter(p => p.status === 1);
+    const lockedPieces = botPieces.filter(p => p.status === 0);
+
+    if (diceResult === 6 && lockedPieces.length > 0) {
+        const piece = lockedPieces[0];
+        piece.unlockPiece();
+        currentPlayerTurnStatus = true;
+        setTimeout(() => rollDiceButtonForBot(), 700);
+        return;
+    }
+
+    for (let piece of unlockedPieces) {
+        const array = giveArrayForMovingPath(piece);
+        if (array.length > 0) {
+            piece.movePiece(array);
+            currentPlayerTurnStatus = true;
+            if (diceResult === 6) {
+                setTimeout(() => rollDiceButtonForBot(), 1000);
+            } else {
+                nextTeamTurn();
+            }
+            return;
+        }
+    }
+
+    currentPlayerTurnStatus = true;
+    nextTeamTurn();
+}
+
+const rollDiceButtonForBot = () => {
+    if (!currentPlayerTurnStatus) return;
+
+    const team = playerTurns[currentPlayerTurnIndex];
+    diceImages[team].src = rollDiceGif.src;
+
+    diceResult = Math.floor(Math.random() * 6) + 1;
+    currentPlayerTurnStatus = true;
+
+    setTimeout(async () => {
+        diceImages[team].src = `./Assets/Dice_${diceResult}.png`;
+        await delay(700);
+        turnForBot();
+    }, 600);
+};
+
+document.addEventListener('keydown', (e) => {
+    const currentTeam = playerTurns[currentPlayerTurnIndex];
+    if (currentTeam !== userSelectedColor) return;
+
+    const keyMap = {
+        '1': '[myPieceNum="1"]',
+        '2': '[myPieceNum="2"]',
+        '3': '[myPieceNum="3"]',
+        '4': '[myPieceNum="4"]',
+        ' ': `.team-roll-btn`
+    };
+
+    const selector = keyMap[e.key] || keyMap[e.code === 'Space' ? ' ' : ''];
+    if (selector) document.querySelector(selector)?.click();
+});
