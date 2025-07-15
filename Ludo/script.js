@@ -11,29 +11,15 @@ const diceImages = {
     green: document.getElementById('dice-green'),
     yellow: document.getElementById('dice-yellow')
 };
-
-const rollButtons = {
-    blue: createRollButton('blue'),
-    red: createRollButton('red'),
-    green: createRollButton('green'),
-    yellow: createRollButton('yellow')
-};
-
-// Attach roll buttons under each dice
-for (const color in rollButtons) {
-    diceImages[color].parentElement.appendChild(rollButtons[color]);
+const rollDiceGif = new Image();
+rollDiceGif.src = `./Assets/rollDice.gif`;
+for (const color in diceImages) {
+    diceImages[color].addEventListener('click', () => handleRoll(color));
 }
 
-function createRollButton(color) {
-    const btn = document.createElement('button');
-    btn.textContent = 'ROLL';
-    btn.classList.add('team-roll-btn');
-    btn.style.marginTop = '8px';
-    btn.style.padding = '6px 12px';
-    btn.disabled = true;
-    btn.addEventListener('click', () => handleRoll(color));
-    return btn;
-}
+
+
+
 
 let playerTurns = [];
 let currentPlayerTurnIndex = 0;
@@ -67,15 +53,21 @@ class Player_Piece {
         document.getElementById(this.entry).appendChild(document.querySelector(`[piece_id="${this.piece_id}"]`));
     }
 
-    movePiece(array) {
-        array.forEach((pos, idx) => {
-            setTimeout(() => {
-                const el = document.querySelector(`[piece_id="${this.piece_id}"]`);
-                document.getElementById(pos).appendChild(el);
-                this.position = pos;
-            }, idx * 175);
-        });
-    }
+  movePiece(array) {
+    array.forEach((pos, idx) => {
+        setTimeout(() => {
+            const el = document.querySelector(`[piece_id="${this.piece_id}"]`);
+            document.getElementById(pos).appendChild(el);
+            this.position = pos;
+
+            // ✅ Check for cut on final move
+            if (idx === array.length - 1) {
+                checkAndCutOpponent(this);
+            }
+        }, idx * 175);
+    });
+}
+
 
     sentMeToBoard() {
         this.status = 0;
@@ -126,9 +118,9 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const setPlayerTurn = (i) => {
     document.querySelectorAll('.board').forEach(b => b.classList.remove('active'));
-    Object.keys(rollButtons).forEach(color => {
-        rollButtons[color].disabled = color !== playerTurns[i];
-    });
+    // Object.keys(rollButtons).forEach(color => {
+      
+    // });
 
     const current = playerTurns[i];
     const boardObj = boardDetails.find(obj => obj.boardColor === current);
@@ -172,7 +164,7 @@ function giveArrayForMovingPath(piece) {
 
 const turnForUser = async (e) => {
     const currentTeam = playerTurns[currentPlayerTurnIndex];
-    if (currentTeam !== userSelectedColor || !currentPlayerTurnStatus) return;
+    if (currentTeam !== userSelectedColor || !currentPlayerTurnStatus || moveMadeThisTurn) return;
 
     const piece = playerPieces.find(
         p => p.piece_id === e.target.getAttribute('piece_id') && p.team === currentTeam
@@ -188,12 +180,17 @@ const turnForUser = async (e) => {
     const opponents = playerPieces.filter(p => p.team !== currentTeam && p.status === 1);
     const cut = opponents.find(p => p.position === array[array.length - 1] && !safePaths.includes(p.position));
 
+    moveMadeThisTurn = true; // ✅ Block further piece clicks this turn
+
     if (cut) {
         piece.movePiece(array);
         await delay(array.length * 175);
         cut.sentMeToBoard();
         currentPlayerTurnStatus = true;
-        if (diceResult === 6) return;
+        if (diceResult === 6) {
+            rollButtons[currentTeam].disabled = false; // allow reroll
+            return;
+        }
         nextTeamTurn();
         return;
     }
@@ -202,6 +199,7 @@ const turnForUser = async (e) => {
         piece.unlockPiece();
         await delay(400);
         currentPlayerTurnStatus = true;
+        rollButtons[currentTeam].disabled = false; // ✅ allow reroll after unlock
         return;
     }
 
@@ -209,7 +207,9 @@ const turnForUser = async (e) => {
         piece.movePiece(array);
         await delay(array.length * 175);
         currentPlayerTurnStatus = true;
-        if (diceResult !== 6) {
+        if (diceResult === 6) {
+       
+        } else {
             nextTeamTurn();
         }
         return;
@@ -218,18 +218,18 @@ const turnForUser = async (e) => {
     currentPlayerTurnStatus = true;
 };
 
-const rollDiceGif = new Image();
-rollDiceGif.src = `./Assets/rollDice.gif`;
+
+
 
 async function handleRoll(color) {
     const currentTeam = playerTurns[currentPlayerTurnIndex];
     if (color !== currentTeam || !currentPlayerTurnStatus) return;
 
-    rollButtons[color].disabled = true;
     diceImages[color].src = rollDiceGif.src;
 
     diceResult = Math.floor(Math.random() * 6) + 1;
     teamHasBonus = (diceResult === 6);
+    moveMadeThisTurn = false; // RESET HERE ✅
     currentPlayerTurnStatus = true;
 
     setTimeout(async () => {
@@ -237,6 +237,7 @@ async function handleRoll(color) {
         await delay(700);
 
         const totalUnlocked = playerPieces.filter(obj => obj.team === currentTeam && obj.status === 1);
+
         if (diceResult !== 6 && totalUnlocked.length === 0) {
             await delay(500);
             currentPlayerTurnStatus = true;
@@ -244,6 +245,7 @@ async function handleRoll(color) {
         }
     }, 600);
 }
+
 
 function turnForBot() {
     const currentTeam = playerTurns[currentPlayerTurnIndex];
@@ -292,6 +294,19 @@ const rollDiceButtonForBot = () => {
         turnForBot();
     }, 600);
 };
+function checkAndCutOpponent(currentPiece) {
+    const opponents = playerPieces.filter(p => p.team !== currentPiece.team && p.status === 1);
+    const targetPos = currentPiece.position;
+
+    if (safePaths.includes(targetPos)) return; // no cutting on safe spots
+
+    for (const opp of opponents) {
+        if (opp.position === targetPos) {
+            opp.sentMeToBoard();
+            break;
+        }
+    }
+}
 
 document.addEventListener('keydown', (e) => {
     const currentTeam = playerTurns[currentPlayerTurnIndex];
@@ -302,7 +317,7 @@ document.addEventListener('keydown', (e) => {
         '2': '[myPieceNum="2"]',
         '3': '[myPieceNum="3"]',
         '4': '[myPieceNum="4"]',
-        ' ': `.team-roll-btn`
+        ' ':  `#dice-${userSelectedColor}`
     };
 
     const selector = keyMap[e.key] || keyMap[e.code === 'Space' ? ' ' : ''];

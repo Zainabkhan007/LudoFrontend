@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GameHub Dashboard</title>
+  <style>
+    body {
+      margin: 0;
+      background: #1f2937;
+      font-family: Arial, sans-serif;
+      color: white;
+      display: flex;
+      flex-direction: row;
+      height: 100vh;
+    }
+    aside.sidebar {
+      width: 219px;
+      background: #111827;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      transition: transform 0.3s ease;
+      z-index: 1000;
+    }
+    aside.sidebar h1 { font-size: 1.5rem; margin-bottom: 20px; }
+    aside.sidebar button {
+      display: flex; align-items: center; gap: 8px;
+      background: transparent; color: white; border: none;
+      padding: 10px; margin-bottom: 5px; cursor: pointer;
+      border-radius: 5px;
+    }
+    aside.sidebar button:hover { background: #374151; }
+    aside.sidebar button.logout {
+      background: #dc2626; margin-top: auto;
+    }
+    aside.sidebar button.logout:hover { background: #b91c1c; }
+    .topbar {
+      display: none; position: fixed; top: 0; left: 0; right: 0;
+      background: #111827; color: white; padding: 15px;
+      z-index: 1100; justify-content: space-between; align-items: center;
+    }
+    .hamburger { font-size: 1.5rem; cursor: pointer; color: white; }
+    main {
+      flex: 1; margin-left: 250px; padding: 20px;
+      overflow-y: auto; transition: margin-left 0.3s ease;
+    }
+    .hero {
+      position: relative; border-radius: 10px;
+      overflow: hidden; margin-bottom: 20px;
+    }
+    .hero img { width: 100%; display: block; }
+    .hero .play-btn {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: #2563eb; color: white; padding: 10px 20px;
+      border: none; border-radius: 5px; cursor: pointer;
+    }
+    .hero .play-btn:hover { background: #1d4ed8; }
+    .grid {
+      display: flex; flex-wrap: wrap; gap: 20px;
+    }
+    .grid .card {
+      flex: 1 1 300px; background: #374151;
+      padding: 15px; border-radius: 10px;
+    }
+    .rightpanel {
+      width: 250px; background: #111827;
+      padding: 20px; flex-shrink: 0;
+    }
+    .active-users ul {
+      list-style: none; margin: 0; padding: 0;
+    }
+    .active-users li {
+      display: flex; justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    @media (max-width: 1024px) {
+      .topbar { display: flex; height: 35px; }
+      aside.sidebar { transform: translateX(-100%); }
+      aside.sidebar.active { transform: translateX(0); }
+      main { margin-left: 0; padding-top: 60px; }
+      .rightpanel { display: none; }
+      .grid .card.stats { display: none; }
+      .active-users-mobile {
+        display: block; background: #374151;
+        margin-top: 20px; padding: 15px;
+        border-radius: 10px;
+      }
+    }
+    @media (min-width: 1025px) { .active-users-mobile { display: none; } }
+    .active-users-mobile ul {
+      list-style: none; margin: 0; padding: 0;
+    }
+    .active-users-mobile li {
+      display: flex; justify-content: space-between;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Topbar -->
+  <div class="topbar">
+    <span class="hamburger" id="hamburger">☰</span>
+    <h2>GameHub</h2>
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <h1>GameHub</h1>
+    <button><span>🏠</span> Dashboard</button>
+    <button onclick="window.location.href='ludo.html'"><span>🎮</span> Play Game</button>
+    <button onclick="window.location.href='profile.html'"><span>👤</span> Profile Settings</button>
+    <button onclick="window.location.href='gameplay.html'"><span>ℹ️</span> How to Play</button>
+    <button onclick="window.location.href='conditions.html'"><span>📜</span> Terms & Conditions</button>
+    <button class="logout" id="logout"><span>🚪</span> Logout</button>
+  </aside>
+
+  <!-- Main -->
+  <main>
+    <div class="profile-header" style="display:flex;align-items:center;gap:10px;margin-bottom:15px;">
+      <img
+        id="dashboard-profile-img"
+        src="http://127.0.0.1:8000/media/profiles/default-avatar.png"
+        alt="profile image"
+        style="width:60px;height:60px;border-radius:50%;border:2px solid #3b82f6;object-fit:cover;"
+      />
+      <div>
+        <p id="dashboard-user-email" style="color:#9ca3af;margin:0;font-size:0.9rem;">loading...</p>
+      </div>
+    </div>
+
+    <h2>Welcome to The Dashboard!</h2>
+    <div class="hero">
+      <img src="ludo.jpg" alt="Ludo Game" />
+      <button class="play-btn" onclick="window.location.href='chose.html'">Play Now</button>
+    </div>
+    <div class="grid">
+      <div class="card stats">
+        <h3>Your Stats</h3>
+        <p>Games played: <span id="games-played">0</span></p>
+        <p>Rank: <span id="user-rank">Silver</span></p>
+      </div>
+      <div class="card">
+        <h3>Community Chat</h3>
+        <p>Connect with fellow players and share your strategies.</p>
+        <button
+          style="background: #2563eb; color: white; border: none; padding: 10px 15px; margin-top: 10px; border-radius: 5px; cursor: pointer;"
+          onclick="window.location.href='chat.html'"
+        >💬 Go to Chat Room</button>
+      </div>
+    </div>
+    <div class="active-users-mobile">
+      <h3>Active Users</h3>
+      <ul id="active-users-mobile-list"></ul>
+    </div>
+  </main>
+
+  <!-- Right panel -->
+  <aside class="rightpanel">
+    <h3>Active Users</h3>
+    <div class="active-users">
+      <ul id="active-users-list"></ul>
+    </div>
+  </aside>
+
+<script>
+  document.getElementById("hamburger").addEventListener("click", () => {
+    document.getElementById("sidebar").classList.toggle("active");
+  });
+
+  // active users
+  fetch('https://ludo21.pythonanywhere.com/api/active_users/', { credentials: "include" })
+    .then(res => res.json())
+    .then(users => {
+      const listDesktop = document.getElementById('active-users-list');
+      const listMobile = document.getElementById('active-users-mobile-list');
+      listDesktop.innerHTML = "";
+      listMobile.innerHTML = "";
+      users.forEach(user => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <span>${user.name}</span>
+          <span style="width:8px;height:8px;border-radius:50%;background:${user.status==='online'?'green':'red'};display:inline-block;"></span>
+        `;
+        listDesktop.appendChild(li.cloneNode(true));
+        listMobile.appendChild(li);
+      });
+    })
+    .catch(err => console.error("active users error", err));
+
+  // load profile image & email from GET endpoint
+  const email = localStorage.getItem("user_email");
+  if (email) {
+    fetch(`https://ludo21.pythonanywhere.com/api/update_profile_picture/?email=${email}`, {
+      method: "GET"
+    })
+    .then(res => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    })
+    .then(data => {
+      document.getElementById("dashboard-user-email").textContent = email;
+      const img = document.getElementById("dashboard-profile-img");
+      if (data.profile_picture) {
+        img.src = `https://ludo21.pythonanywhere.com${data.profile_picture}`;
+      } else {
+        img.src = `https://ludo21.pythonanywhere.com/media/profiles/default-avatar.png`;
+      }
+    })
+    .catch(err => console.error("profile load failed", err));
+  } else {
+    document.getElementById("dashboard-user-email").textContent = "No email found";
+  }
+
+  // logout
+  document.getElementById('logout').addEventListener('click', () => {
+    fetch('https://ludo21.pythonanywhere.com/api/logout/', {
+      method: "POST",
+      credentials: "include"
+    })
+    .then(() => {
+      localStorage.clear()
+      window.location.href="index.html"
+    })
+    .catch(err => console.error("logout failed", err));
+  });
+</script>
+</body>
+</html>

@@ -346,7 +346,7 @@ canvas {
 
     .diceImage {
         width: 50px;
-        height: 50px;
+        /* height: 50px; */
     }
 
     .dice-row div {
