@@ -1,0 +1,88 @@
+                <!doctype html>
+                <html lang="en">
+                    <head>
+                        <meta charset="UTF-8" />
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                        <title>Ludo World - Multiplayer</title>
+                        <link rel="stylesheet" href="style.css" />
+                    </head>
+                    <body>
+                        <!-- THIS SCREEN'S STRUCTURE IS NOW FIXED AND ROBUST -->
+                        <div id="home-screen">
+                            <div class="ui-panel">
+                                <div class="title-container">
+                                    <h1>Ludo<br />World</h1>
+                                </div>
+                                <div class="menu-container">
+                                    <div class="menu-buttons">
+                                        <button class="menu-button" data-players="2">
+                                            Create 2 Player Game
+                                        </button>
+                                        <button class="menu-button" data-players="3">
+                                            Create 3 Player Game
+                                        </button>
+                                        <button class="menu-button" data-players="4">
+                                            Create 4 Player Game
+                                        </button>
+                                        <button class="menu-button" id="join-room-btn-home">
+                                            Join Game With Code
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="lobby-screen" class="hidden">
+                            <h2>Lobby</h2>
+                            <p>Share this code with friends:</p>
+                            <div class="code-display">
+                                <div id="lobby-code">----</div>
+                            </div>
+                            <div id="player-list"></div>
+                            <button class="menu-button" id="start-game-btn" disabled>
+                                Start Game
+                            </button>
+                        </div>
+
+                        <div id="game-screen" class="hidden">
+                            <div id="game-container">
+                                <div id="ludo-board"></div>
+                                <div id="game-info" class="ui-panel">
+                                    <h2>Ludo</h2>
+                                    <div id="turn-indicator">Waiting...</div>
+                                    <div id="dice-container"><div id="dice">?</div></div>
+                                    <p id="game-message">Waiting for game to start.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="join-room-modal" class="modal hidden">
+                            <div class="modal-content ui-panel">
+                                <span class="close-button">×</span>
+                                <h2>Join a Room</h2>
+                                <div class="join-input-group">
+                                    <input
+                                        type="text"
+                                        id="room-code-input"
+                                        placeholder="CODE"
+                                        maxlength="4"
+                                    />
+                                    <button class="menu-button" id="submit-join-btn">
+                                        Join
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="winner-modal" class="modal hidden">
+                            <div class="modal-content ui-panel">
+                                <h2 id="winner-message">Red Wins!</h2>
+                                <button class="menu-button" id="main-menu-btn">
+                                    Back to Main Menu
+                                </button>
+                            </div>
+                        </div>
+                        <script src="/socket.io/socket.io.js"></script>
+                        <script src="client.js"></script>
+                    </body>
+                </html>

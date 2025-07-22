@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GameHub Chat</title>
   <style>
     body {
@@ -15,6 +16,7 @@
       align-items: center;
       height: 100vh;
     }
+
     .chat-container {
       width: 100%;
       max-width: 500px;
@@ -26,6 +28,7 @@
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
       overflow: hidden;
     }
+
     .chat-header {
       background: #1f2937;
       padding: 15px;
@@ -35,6 +38,7 @@
       gap: 10px;
       border-bottom: 1px solid #374151;
     }
+
     .chat-messages {
       flex: 1;
       padding: 15px;
@@ -43,6 +47,7 @@
       display: flex;
       flex-direction: column;
     }
+
     .chat-message {
       margin-bottom: 15px;
       max-width: 80%;
@@ -50,16 +55,25 @@
       padding: 10px 15px;
       border-radius: 10px;
     }
+
     .chat-message.user {
       background: #4338ca;
       align-self: flex-end;
       text-align: right;
     }
+
     .chat-message.bot {
       background: #374151;
       align-self: flex-start;
       text-align: left;
     }
+
+    .chat-message.emoji-only {
+      font-size: 2rem;
+      padding: 10px;
+      line-height: 2.2rem;
+    }
+
     .chat-footer {
       padding: 10px;
       background: #111827;
@@ -67,6 +81,7 @@
       display: flex;
       gap: 8px;
     }
+
     .chat-footer input {
       flex: 1;
       padding: 10px;
@@ -75,9 +90,11 @@
       background: #1f2937;
       color: white;
     }
+
     .chat-footer input::placeholder {
       color: #9ca3af;
     }
+
     .chat-footer button {
       background: #4338ca;
       color: white;
@@ -87,99 +104,152 @@
       cursor: pointer;
       transition: background 0.3s ease;
     }
+
     .chat-footer button:hover {
       background: #4f46e5;
     }
+
+    #emoji-btn {
+      background: transparent;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: white;
+    }
+
+    #emoji-btn:hover {
+      opacity: 0.7;
+    }
   </style>
+
+  <!-- Pusher -->
   <script src="https://js.pusher.com/8.2/pusher.min.js"></script>
+
+  <!-- Load Emoji Picker -->
+  <script type="module">
+    import { EmojiButton } from 'https://cdn.skypack.dev/@joeattardi/emoji-button';
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const chatMessages = document.getElementById("chatMessages");
+      const messageInput = document.getElementById("messageInput");
+      const emojiBtn = document.getElementById("emoji-btn");
+      const sendBtn = document.getElementById("sendBtn");
+
+      // ✅ Store and use the prompted username
+      let currentUser = sessionStorage.getItem("username");
+      if (!currentUser) {
+        currentUser = prompt("Enter your username:");
+        if (!currentUser) {
+          alert("Username is required.");
+          window.location.href = "index.html";
+          return;
+        }
+        sessionStorage.setItem("username", currentUser);
+      }
+
+      // ✅ Show username in input placeholder
+      messageInput.placeholder = `Message as ${currentUser}`;
+
+      // ✅ Function to show messages
+      function appendMessage(username, message) {
+        console.log("🔍 appendMessage called with:");
+        console.log("username:", username);
+        console.log("currentUser:", currentUser);
+        console.log("message:", message);
+        const el = document.createElement("div");
+        const isEmojiOnly = /^(\p{Emoji_Presentation}|\p{Emoji}|\s)+$/u.test(message);
+        el.className = username === currentUser ? "chat-message user" : "chat-message bot";
+        if (isEmojiOnly) {
+          el.classList.add("emoji-only");
+        }
+        el.textContent = (username?.toLowerCase() === currentUser?.toLowerCase()) ? `You: ${message}` : `${username}: ${message}`;
+
+        chatMessages.appendChild(el);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+
+      // ✅ Load existing messages from backend
+      async function loadMessages() {
+        try {
+          const res = await fetch("https://ludo21.pythonanywhere.com/api/get_messages/");
+          const messages = await res.json();
+          console.log("📦 Loaded messages from API:", messages);
+          messages.forEach(m => {
+            appendMessage(m.username || m.user, m.message);
+          });
+        } catch (err) {
+          console.error("Failed to load messages", err);
+        }
+      }
+
+      // ✅ Send message logic
+      function sendMessage() {
+        const text = messageInput.value.trim();
+        if (text !== "") {
+          const username = currentUser;  // make sure this matches sessionStorage
+
+          console.log("Sending message from:", username);
+          messageInput.value = "";
+          fetch("https://ludo21.pythonanywhere.com/api/send_message/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              content: text,
+              username: username,
+            })
+          }).catch(err => console.error(err));
+        }
+      }
+
+      sendBtn.addEventListener("click", sendMessage);
+
+      // ✅ Pusher real-time updates
+      const pusher = new Pusher('4f7a40b6031d990f0233', {
+        cluster: 'ap4',
+        encrypted: true
+      });
+
+      const channel = pusher.subscribe('public-chat');
+      channel.bind('new-message', function (data) {
+        console.log("📡 New message received from Pusher:", data);
+
+        const sender = data.username || data.user;
+        appendMessage(sender, data.message);
+      });
+
+      // ✅ Emoji picker
+      const picker = new EmojiButton({
+        position: 'top-start',
+        theme: 'dark'
+      });
+
+      picker.on('emoji', selection => {
+        messageInput.value += selection.emoji;
+        messageInput.focus();
+      });
+
+      emojiBtn.addEventListener('click', () => {
+        picker.togglePicker(emojiBtn);
+      });
+
+      loadMessages();
+    });
+  </script>
+
 </head>
+
 <body>
   <div class="chat-container">
-    <div class="chat-header">
-      Chat with Others
-    </div>
+    <div class="chat-header">Chat with Others</div>
     <div id="chatMessages" class="chat-messages">
       <div class="chat-message bot">Hello there! How can I help you today?</div>
     </div>
     <div class="chat-footer">
+      <button id="emoji-btn">😊</button>
       <input type="text" id="messageInput" placeholder="Type your message...">
-      <button onclick="sendMessage()">Send</button>
+      <button id="sendBtn">Send</button>
     </div>
   </div>
-
-  <script>
-    const chatMessages = document.getElementById("chatMessages");
-    const previousUsername = sessionStorage.getItem("currentUsername");
-    let currentUser = previousUsername;
-
-    if (!currentUser) {
-      currentUser = prompt("Enter your username:");
-      if (!currentUser) {
-        alert("Username is required.");
-        window.location.href = "index.html";
-      } else {
-        sessionStorage.setItem("currentUsername", currentUser);
-        // new user: do NOT load messages
-      }
-    } else {
-      // returning user: load messages
-      loadMessages();
-    }
-
-    // update placeholder with username
-    document.getElementById("messageInput").placeholder = `Message as ${currentUser}`;
-
-    async function loadMessages() {
-      try {
-        const res = await fetch("https://ludo21.pythonanywhere.com/api/get_messages/");
-        const messages = await res.json();
-        messages.forEach(m => {
-          const el = document.createElement("div");
-          el.className = m.username === currentUser ? "chat-message user" : "chat-message bot";
-          el.textContent = m.username === currentUser
-            ? `You: ${m.message}`
-            : `${m.username}: ${m.message}`;
-          chatMessages.appendChild(el);
-        });
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-      } catch (err) {
-        console.error("Failed to load messages", err);
-      }
-    }
-
-    function sendMessage() {
-      const input = document.getElementById("messageInput");
-      const text = input.value.trim();
-      if (text !== "") {
-        input.value = "";
-        fetch("https://ludo21.pythonanywhere.com/api/send_message/", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            content: text,
-            username: currentUser
-          })
-        })
-        .catch(err => console.error(err));
-      }
-    }
-
-    // Pusher
-    const pusher = new Pusher('4f7a40b6031d990f0233', {
-      cluster: 'ap4',
-      encrypted: true
-    });
-
-    const channel = pusher.subscribe('public-chat');
-    channel.bind('new-message', function(data) {
-      const el = document.createElement("div");
-      el.className = data.username === currentUser ? "chat-message user" : "chat-message bot";
-      el.textContent = data.username === currentUser
-        ? `You: ${data.message}`
-        : `${data.username}: ${data.message}`;
-      chatMessages.appendChild(el);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    });
-  </script>
 </body>
+
 </html>

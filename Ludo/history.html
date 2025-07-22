@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Game History</title>
+  <style>
+    body {
+      margin: 0;
+      background: #1f2937;
+      font-family: Arial, sans-serif;
+      color: white;
+      display: flex;
+      flex-direction: row;
+      height: 100vh;
+    }
+    aside.sidebar {
+      width: 219px;
+      background: #111827;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      transition: transform 0.3s ease;
+      z-index: 1000;
+    }
+    aside.sidebar h1 { font-size: 1.5rem; margin-bottom: 20px; }
+    aside.sidebar button {
+      display: flex; align-items: center; gap: 8px;
+      background: transparent; color: white; border: none;
+      padding: 10px; margin-bottom: 5px; cursor: pointer;
+      border-radius: 5px;
+    }
+    aside.sidebar button:hover { background: #374151; }
+    aside.sidebar button.logout {
+      background: #dc2626; margin-top: auto;
+    }
+    aside.sidebar button.logout:hover { background: #b91c1c; }
+    .topbar {
+      display: none; position: fixed; top: 0; left: 0; right: 0;
+      background: #111827; color: white; padding: 15px;
+      z-index: 1100; justify-content: space-between; align-items: center;
+    }
+    .hamburger { font-size: 1.5rem; cursor: pointer; color: white; }
+    main {
+      flex: 1; margin-left: 250px; padding: 20px;
+      overflow-y: auto; transition: margin-left 0.3s ease;
+    }
+    .history-section h2 {
+      margin-bottom: 1rem;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      margin-bottom: 1rem;
+      padding: 1rem;
+      background: #374151;
+      border-radius: 8px;
+    }
+    .winner {
+      color: #22c55e;
+      font-weight: bold;
+    }
+    .loser {
+      color: #ef4444;
+    }
+    @media (max-width: 1024px) {
+      .topbar { display: flex; height: 35px; }
+      aside.sidebar { transform: translateX(-100%); }
+      aside.sidebar.active { transform: translateX(0); }
+      main { margin-left: 0; padding-top: 60px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Topbar -->
+  <div class="topbar">
+    <span class="hamburger" id="hamburger">☰</span>
+    <h2>GameHub</h2>
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <h1>GameHub</h1>
+    <button onclick="window.location.href='dashboard.html'"><span>🏠</span> Dashboard</button>
+    <button onclick="window.location.href='ludo.html'"><span>🎮</span> Play Game</button>
+    <button onclick="window.location.href='profile.html'"><span>👤</span> Profile Settings</button>
+    <button onclick="window.location.href='gameplay.html'"><span>ℹ️</span> How to Play</button>
+    <button onclick="window.location.href='conditions.html'"><span>📜</span> Terms & Conditions</button>
+    <button onclick="window.location.href='chat.html'">💬 Go to Chat Room</button>
+    <button class="logout" id="logout"><span>🚪</span> Logout</button>
+  </aside>
+
+  <!-- Main -->
+  <main>
+    <div class="history-section">
+      <h2>Game History for <span id="user-span">Loading...</span>
+      
+</h2>
+<p>Email: <span id="email">Loading...</span></p>
+       <div id="stats-summary" style="
+      margin: 1rem 0;
+      padding: 1rem;
+      background: #e0e0e0;
+      border: 2px dashed #999;
+      font-weight: bold;
+      text-align: center;
+      border-radius: 8px;
+    ">
+      Winning: 0 &nbsp; | &nbsp; Losing: 0
+    </div>
+
+    <!-- 🔵 Game list goes here -->
+      <ul id="history-list"></ul>
+      
+    </div>
+  </main>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+ 
+<script>
+  let loggedInEmail = null;
+
+  // Step 1: Fetch email from Django backend API
+ 
+  async function getEmail() {
+    console.log("📡 Attempting to fetch email from Django...");
+    try {
+      const response = await fetch("https://ludo21.pythonanywhere.com/api/username/", {
+        credentials: "include",
+      });
+
+      console.log("✅ Received response:", response);
+
+      const data = await response.json();
+      console.log("📦 Parsed data from response:", data);
+
+      const email = data.email && data.email.trim() !== "" ? data.email : "Guest";
+      console.log("👤 Final email:", email);
+
+      document.getElementById("email").innerText = email;
+    } catch (error) {
+      console.error("❌ Error fetching email:", error);
+      document.getElementById("email").innerText = "Guest";
+    }
+  }
+
+  
+
+
+  // Step 2: Load game history from Socket.IO
+  function loadGameHistory() {
+    const socket = io("https://0116c89f-1e28-4dcd-a1ae-cee6dc482610-00-3d67cfpn70yjl.sisko.replit.dev/");
+    const historyList = document.getElementById("history-list");
+
+    let winCount = 0;
+    let loseCount = 0;
+
+    socket.on("connect", () => {
+      socket.emit("getGameHistory");
+    });
+
+    socket.on("gameHistory", (history) => {
+      historyList.innerHTML = "";
+
+      history.forEach((game, index) => {
+        const item = document.createElement("li");
+
+        const isWinner = game.winnerUsername === loggedInEmail;
+        const isLoser = game.losers.includes(loggedInEmail);
+
+        if (isWinner) winCount++;
+        if (isLoser) loseCount++;
+
+        item.textContent = `#${index + 1} - Winner: ${game.winnerUsername} (${game.winnerColor}) | Losers: ${game.losers.join(", ")} | Time: ${new Date(game.time).toLocaleString()}`;
+
+        if (isWinner) item.classList.add("winner");
+        else if (isLoser) item.classList.add("loser");
+
+        historyList.appendChild(item);
+      });
+
+      const statsItem = document.createElement("li");
+      statsItem.innerHTML = `<strong>Winning:</strong> ${winCount} &nbsp; | &nbsp; <strong>Losing:</strong> ${loseCount}`;
+      statsItem.style.background = "#e0e0e0";
+      statsItem.style.border = "2px dashed #999";
+      statsItem.style.fontWeight = "bold";
+      statsItem.style.textAlign = "center";
+      statsItem.style.marginTop = "20px";
+      historyList.prepend(statsItem);
+    });
+  }
+
+  getEmail();
+</script>
+
+
+</body>
+</html>

@@ -39,6 +39,25 @@
       background: #dc2626; margin-top: auto;
     }
     aside.sidebar button.logout:hover { background: #b91c1c; }
+
+    /* Contact Links */
+    .contact-links {
+      margin-top: 20px;
+      border-top: 1px solid #374151;
+      padding-top: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .contact-links a {
+      color: #9ca3af;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .contact-links a:hover {
+      color: white;
+    }
+
     .topbar {
       display: none; position: fixed; top: 0; left: 0; right: 0;
       background: #111827; color: white; padding: 15px;
@@ -79,6 +98,7 @@
       display: flex; justify-content: space-between;
       margin-bottom: 8px;
     }
+
     @media (max-width: 1024px) {
       .topbar { display: flex; height: 35px; }
       aside.sidebar { transform: translateX(-100%); }
@@ -92,7 +112,9 @@
         border-radius: 10px;
       }
     }
-    @media (min-width: 1025px) { .active-users-mobile { display: none; } }
+    @media (min-width: 1025px) {
+      .active-users-mobile { display: none; }
+    }
     .active-users-mobile ul {
       list-style: none; margin: 0; padding: 0;
     }
@@ -113,10 +135,24 @@
   <aside class="sidebar" id="sidebar">
     <h1>GameHub</h1>
     <button><span>🏠</span> Dashboard</button>
-    <button onclick="window.location.href='ludo.html'"><span>🎮</span> Play Game</button>
+    <button onclick="window.location.href='ludogame.html'"><span>🎮</span> Play Game</button>
     <button onclick="window.location.href='profile.html'"><span>👤</span> Profile Settings</button>
     <button onclick="window.location.href='gameplay.html'"><span>ℹ️</span> How to Play</button>
     <button onclick="window.location.href='conditions.html'"><span>📜</span> Terms & Conditions</button>
+    <button onclick="window.location.href='history.html'"><span>📜</span> History</button>
+    <button
+      style="background: #2e2f30ff; color: white; border: none; padding: 10px 15px; margin-top: 10px; border-radius: 5px; cursor: pointer;"
+      onclick="window.location.href='chat.html'"
+    >💬 Go to Chat Room</button>
+
+    <!-- Contact Links -->
+    <div class="contact-links">
+      <h4 style="margin: 0; font-size: 1rem;">Contact Us</h4>
+      <a href="https://wa.me/your-number" target="_blank">📱 WhatsApp</a>
+      <a href="https://www.youtube.com/yourchannel" target="_blank">▶️ YouTube</a>
+      <a href="https://www.tiktok.com/@yourusername" target="_blank">🎵 TikTok</a>
+    </div>
+
     <button class="logout" id="logout"><span>🚪</span> Logout</button>
   </aside>
 
@@ -137,7 +173,7 @@
     <h2>Welcome to The Dashboard!</h2>
     <div class="hero">
       <img src="ludo.jpg" alt="Ludo Game" />
-      <button class="play-btn" onclick="window.location.href='chose.html'">Play Now</button>
+      <button class="play-btn" onclick="window.location.href='ludogame.html'">Play Now</button>
     </div>
     <div class="grid">
       <div class="card stats">
@@ -168,67 +204,64 @@
     </div>
   </aside>
 
-<script>
-  document.getElementById("hamburger").addEventListener("click", () => {
-    document.getElementById("sidebar").classList.toggle("active");
-  });
+  <script>
+    document.getElementById("hamburger").addEventListener("click", () => {
+      document.getElementById("sidebar").classList.toggle("active");
+    });
 
-  // active users
-  fetch('https://ludo21.pythonanywhere.com/api/active_users/', { credentials: "include" })
-    .then(res => res.json())
-    .then(users => {
-      const listDesktop = document.getElementById('active-users-list');
-      const listMobile = document.getElementById('active-users-mobile-list');
-      listDesktop.innerHTML = "";
-      listMobile.innerHTML = "";
-      users.forEach(user => {
-        const li = document.createElement("li");
-        li.innerHTML = `
-          <span>${user.name}</span>
-          <span style="width:8px;height:8px;border-radius:50%;background:${user.status==='online'?'green':'red'};display:inline-block;"></span>
-        `;
-        listDesktop.appendChild(li.cloneNode(true));
-        listMobile.appendChild(li);
-      });
-    })
-    .catch(err => console.error("active users error", err));
+    fetch('https://ludo21.pythonanywhere.com/api/active_users/', { credentials: "include" })
+      .then(res => res.json())
+      .then(users => {
+        const listDesktop = document.getElementById('active-users-list');
+        const listMobile = document.getElementById('active-users-mobile-list');
+        listDesktop.innerHTML = "";
+        listMobile.innerHTML = "";
+        users.forEach(user => {
+          const li = document.createElement("li");
+          li.innerHTML = `
+            <span>${user.name}</span>
+            <span style="width:8px;height:8px;border-radius:50%;background:${user.status==='online'?'green':'red'};display:inline-block;"></span>
+          `;
+          listDesktop.appendChild(li.cloneNode(true));
+          listMobile.appendChild(li);
+        });
+      })
+      .catch(err => console.error("active users error", err));
 
-  // load profile image & email from GET endpoint
-  const email = localStorage.getItem("user_email");
-  if (email) {
-    fetch(`https://ludo21.pythonanywhere.com/api/update_profile_picture/?email=${email}`, {
-      method: "GET"
-    })
-    .then(res => {
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json();
-    })
-    .then(data => {
-      document.getElementById("dashboard-user-email").textContent = email;
-      const img = document.getElementById("dashboard-profile-img");
-      if (data.profile_picture) {
-        img.src = `https://ludo21.pythonanywhere.com${data.profile_picture}`;
-      } else {
-        img.src = `https://ludo21.pythonanywhere.com/media/profiles/default-avatar.png`;
-      }
-    })
-    .catch(err => console.error("profile load failed", err));
-  } else {
-    document.getElementById("dashboard-user-email").textContent = "No email found";
-  }
+    const email = localStorage.getItem("user_email");
+    if (email) {
+      fetch(`https://ludo21.pythonanywhere.com/api/update_profile_picture/?email=${email}`, {
+        method: "GET"
+      })
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then(data => {
+        document.getElementById("dashboard-user-email").textContent = email;
+        const img = document.getElementById("dashboard-profile-img");
+        if (data.profile_picture) {
+          img.src = `https://ludo21.pythonanywhere.com${data.profile_picture}`;
+        } else {
+          img.src = `https://ludo21.pythonanywhere.com/media/profiles/default-avatar.png`;
+        }
+      })
+      .catch(err => console.error("profile load failed", err));
+    } else {
+      document.getElementById("dashboard-user-email").textContent = "No email found";
+    }
 
-  // logout
-  document.getElementById('logout').addEventListener('click', () => {
-    fetch('https://ludo21.pythonanywhere.com/api/logout/', {
-      method: "POST",
-      credentials: "include"
-    })
-    .then(() => {
-      localStorage.clear()
-      window.location.href="index.html"
-    })
-    .catch(err => console.error("logout failed", err));
-  });
-</script>
+    document.getElementById('logout').addEventListener('click', () => {
+      fetch('https://ludo21.pythonanywhere.com/api/logout/', {
+        method: "POST",
+        credentials: "include"
+      })
+      .then(() => {
+        localStorage.clear()
+        window.location.href="index.html"
+      })
+      .catch(err => console.error("logout failed", err));
+    });
+  </script>
 </body>
 </html>
